@@ -8,16 +8,147 @@
 			"declarations": [
 				{
 					"kind": "class",
-					"description": "A web component comprising a list of validation rules for a field.",
+					"description": "A web component comprising a list of validation rules for a field. As users type, each rule is checked against a regular expression pattern and displays a checkmark (✓) or X (✗) to indicate whether the requirement is met.",
 					"name": "FormValidationListElement",
-					"members": [],
-					"events": [],
-					"attributes": [],
+					"cssParts": [],
+					"slots": [
+						{
+							"description": "Default slot for list items with data-pattern attributes",
+							"name": ""
+						}
+					],
+					"members": [
+						{
+							"kind": "method",
+							"name": "validate",
+							"return": {
+								"type": {
+									"text": "boolean"
+								},
+								"description": "Whether all rules are currently matched"
+							},
+							"description": "Manually trigger validation"
+						},
+						{
+							"kind": "field",
+							"name": "isValid",
+							"type": {
+								"text": "boolean"
+							},
+							"description": "Get the current validation state",
+							"readonly": true
+						}
+					],
+					"events": [
+						{
+							"name": "form-validation-list:validated",
+							"type": {
+								"text": "CustomEvent"
+							},
+							"description": "Fired when validation completes with details about matched/total rules",
+							"eventDetail": {
+								"type": {
+									"text": "{ isValid: boolean, matchedRules: number, totalRules: number, field: HTMLElement }"
+								}
+							}
+						}
+					],
+					"attributes": [
+						{
+							"name": "for",
+							"type": {
+								"text": "string"
+							},
+							"description": "The ID of the input field to validate",
+							"fieldName": "for"
+						},
+						{
+							"name": "trigger-event",
+							"type": {
+								"text": "string"
+							},
+							"description": "The event to trigger validation on (default: \"input\")",
+							"default": "\"input\"",
+							"fieldName": "triggerEvent"
+						},
+						{
+							"name": "each-delay",
+							"type": {
+								"text": "number"
+							},
+							"description": "Delay in milliseconds between each rule being classified (default: 150)",
+							"default": "150",
+							"fieldName": "eachDelay"
+						},
+						{
+							"name": "field-invalid-class",
+							"type": {
+								"text": "string"
+							},
+							"description": "The class to apply when the field is invalid (default: \"validation-invalid\")",
+							"default": "\"validation-invalid\"",
+							"fieldName": "fieldInvalidClass"
+						},
+						{
+							"name": "field-valid-class",
+							"type": {
+								"text": "string"
+							},
+							"description": "The class to apply when the field is valid (default: \"validation-valid\")",
+							"default": "\"validation-valid\"",
+							"fieldName": "fieldValidClass"
+						},
+						{
+							"name": "rule-unmatched-class",
+							"type": {
+								"text": "string"
+							},
+							"description": "The class to apply when the rule's requirement are not met (default: \"validation-unmatched\")",
+							"default": "\"validation-unmatched\"",
+							"fieldName": "ruleUnmatchedClass"
+						},
+						{
+							"name": "rule-matched-class",
+							"type": {
+								"text": "string"
+							},
+							"description": "The class to apply when the rule's requirement are met (default: \"validation-matched\")",
+							"default": "\"validation-matched\"",
+							"fieldName": "ruleMatchedClass"
+						}
+					],
 					"superclass": {
 						"name": "HTMLElement"
 					},
 					"tagName": "form-validation-list",
-					"customElement": true
+					"customElement": true,
+					"cssProperties": [
+						{
+							"name": "--validation-icon-matched",
+							"description": "Content for the matched state icon",
+							"default": "\"✓\""
+						},
+						{
+							"name": "--validation-icon-unmatched",
+							"description": "Content for the unmatched state icon",
+							"default": "\"✗\""
+						},
+						{
+							"name": "--validation-icon-size",
+							"description": "Size of the validation icons",
+							"default": "1em"
+						},
+						{
+							"name": "--validation-matched-color",
+							"description": "Color for matched rules",
+							"default": "green"
+						},
+						{
+							"name": "--validation-unmatched-color",
+							"description": "Color for unmatched rules",
+							"default": "red"
+						}
+					]
 				}
 			],
 			"exports": [
