@@ -8,7 +8,7 @@
 			"declarations": [
 				{
 					"kind": "class",
-					"description": "A web component comprising a list of validation rules for a field. As users type, each rule is checked against a regular expression pattern and displays a checkmark (✓) or X (✗) to indicate whether the requirement is met.",
+					"description": "A web component comprising a list of validation rules for a field. As users type, each rule is checked against a regular expression pattern and displays a checkmark (\u2713) or X (\u2717) to indicate whether the requirement is met.",
 					"name": "FormValidationListElement",
 					"cssParts": [],
 					"slots": [
@@ -115,6 +115,15 @@
 							"description": "The class to apply when the rule's requirement are met (default: \"validation-matched\")",
 							"default": "\"validation-matched\"",
 							"fieldName": "ruleMatchedClass"
+						},
+						{
+							"name": "validation-message",
+							"type": {
+								"text": "string"
+							},
+							"description": "Custom validation message template with {matched} and {total} placeholders for internationalization (default: \"Please match all validation requirements ({matched} of {total})\")",
+							"default": "\"Please match all validation requirements ({matched} of {total})\"",
+							"fieldName": "validationMessage"
 						}
 					],
 					"superclass": {
@@ -126,12 +135,12 @@
 						{
 							"name": "--validation-icon-matched",
 							"description": "Content for the matched state icon",
-							"default": "\"✓\""
+							"default": "\"\u2713\""
 						},
 						{
 							"name": "--validation-icon-unmatched",
 							"description": "Content for the unmatched state icon",
-							"default": "\"✗\""
+							"default": "\"\u2717\""
 						},
 						{
 							"name": "--validation-icon-size",
