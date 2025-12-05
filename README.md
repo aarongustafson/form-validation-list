@@ -90,6 +90,7 @@ customElements.define('my-custom-name', FormValidationListElement);
 | `field-valid-class` | `string` | `"validation-valid"` | Class to apply to the field when valid |
 | `rule-unmatched-class` | `string` | `"validation-unmatched"` | Class to apply to unmatched rules |
 | `rule-matched-class` | `string` | `"validation-matched"` | Class to apply to matched rules |
+| `validation-message` | `string` | `"Please match all validation requirements ({matched} of {total})"` | Custom validation message template. Use `{matched}` and `{total}` as placeholders for internationalization |
 
 ### Example with Custom Attributes
 
@@ -210,6 +211,36 @@ form-validation-list li {
   transition: all 0.3s ease;
 }
 ```
+
+## Internationalization
+
+The `validation-message` attribute supports customizable error messages with placeholders for easy internationalization:
+
+```html
+<!-- Spanish -->
+<form-validation-list
+  for="contrasena"
+  validation-message="Por favor, cumple todos los requisitos ({matched} de {total})">
+  <ul>
+    <li data-pattern="[A-Z]+">Al menos una letra mayúscula</li>
+    <li data-pattern="[a-z]+">Al menos una letra minúscula</li>
+    <li data-pattern="[\d]+">Al menos un número</li>
+  </ul>
+</form-validation-list>
+
+<!-- French -->
+<form-validation-list
+  for="mot-de-passe"
+  validation-message="Veuillez satisfaire à toutes les exigences ({matched} sur {total})">
+  <ul>
+    <li data-pattern="[A-Z]+">Au moins une lettre majuscule</li>
+    <li data-pattern="[a-z]+">Au moins une lettre minuscule</li>
+    <li data-pattern="[\d]+">Au moins un chiffre</li>
+  </ul>
+</form-validation-list>
+```
+
+The message template uses `{matched}` and `{total}` as placeholders that will be replaced with the current count of matched rules and total rules.
 
 ## Accessibility
 
