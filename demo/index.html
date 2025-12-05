@@ -256,6 +256,152 @@
 				</div>
 			</section>
 
+			<!-- Customization Example -->
+			<section>
+				<h2>Customization Options</h2>
+				<p>
+					The component provides several attributes to customize its
+					behavior and styling.
+				</p>
+
+				<div class="demo-section">
+					<h3>Custom Trigger Event and Delay</h3>
+					<p>
+						Use <code>trigger-event="blur"</code> to validate only
+						when the field loses focus, and
+						<code>each-delay="0"</code> to remove the cascade
+						animation.
+					</p>
+					<div class="code-demo-pair">
+						<pre><code>&lt;form-validation-list
+  for="custom-trigger"
+  trigger-event="blur"
+  each-delay="0"&gt;
+  &lt;ul&gt;
+    &lt;li data-pattern="[A-Z]+"&gt;Capital letter&lt;/li&gt;
+    &lt;li data-pattern="[a-z]+"&gt;Lowercase letter&lt;/li&gt;
+    &lt;li data-pattern="[\d]+"&gt;Number&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form-validation-list&gt;</code></pre>
+						<div class="demo">
+							<form>
+								<label for="custom-trigger"
+									>Try me (blur to validate):</label
+								>
+								<input
+									type="text"
+									id="custom-trigger"
+									name="custom-trigger"
+									required
+								/>
+
+								<form-validation-list
+									for="custom-trigger"
+									trigger-event="blur"
+									each-delay="0"
+								>
+									<ul>
+										<li data-pattern="[A-Z]+">
+											Capital letter
+										</li>
+										<li data-pattern="[a-z]+">
+											Lowercase letter
+										</li>
+										<li data-pattern="[\d]+">Number</li>
+									</ul>
+								</form-validation-list>
+
+								<small
+									>Validation runs on blur, no cascade
+									animation</small
+								>
+							</form>
+						</div>
+					</div>
+				</div>
+
+				<div class="demo-section">
+					<h3>Custom CSS Classes</h3>
+					<p>
+						Customize the class names applied to fields and rules
+						for easier integration with CSS frameworks.
+					</p>
+					<div class="code-demo-pair">
+						<pre><code>&lt;style&gt;
+  .is-valid { border-color: green; }
+  .is-invalid { border-color: red; }
+  .rule-pass { color: green; }
+  .rule-fail { color: red; }
+&lt;/style&gt;
+
+&lt;form-validation-list
+  for="custom-classes"
+  field-valid-class="is-valid"
+  field-invalid-class="is-invalid"
+  rule-matched-class="rule-pass"
+  rule-unmatched-class="rule-fail"&gt;
+  &lt;ul&gt;
+    &lt;li data-pattern=".{5,}"&gt;At least 5 characters&lt;/li&gt;
+    &lt;li data-pattern="[!@#]+"&gt;Special char (!@#)&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form-validation-list&gt;</code></pre>
+						<div class="demo">
+							<style>
+								.is-valid {
+									border-color: green;
+									border-width: 2px;
+								}
+								.is-invalid {
+									border-color: red;
+									border-width: 2px;
+								}
+								.rule-pass {
+									color: green;
+									font-weight: bold;
+								}
+								.rule-fail {
+									color: red;
+									font-style: italic;
+								}
+							</style>
+							<form>
+								<label for="custom-classes"
+									>Custom class names:</label
+								>
+								<input
+									type="text"
+									id="custom-classes"
+									name="custom-classes"
+									required
+								/>
+
+								<form-validation-list
+									for="custom-classes"
+									field-valid-class="is-valid"
+									field-invalid-class="is-invalid"
+									rule-matched-class="rule-pass"
+									rule-unmatched-class="rule-fail"
+								>
+									<ul>
+										<li data-pattern=".{5,}">
+											At least 5 characters
+										</li>
+										<li data-pattern="[!@#]+">
+											Special char (!@#)
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<small
+									>Uses custom classes: is-valid/is-invalid,
+									rule-pass/rule-fail</small
+								>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
+
 			<!-- Event Listener Example -->
 			<section>
 				<h2>JavaScript API</h2>
@@ -346,13 +492,13 @@
 					<div class="code-demo-pair">
 						<pre><code>&lt;form&gt;
   &lt;label for="contrasena"&gt;Contraseña:&lt;/label&gt;
-  &lt;input 
-    type="password" 
-    id="contrasena" 
-    name="contrasena" 
+  &lt;input
+    type="password"
+    id="contrasena"
+    name="contrasena"
     required&gt;
 
-  &lt;form-validation-list 
+  &lt;form-validation-list
     for="contrasena"
     validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"&gt;
     &lt;ul&gt;
