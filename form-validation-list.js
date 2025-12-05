@@ -10,6 +10,7 @@
  * @attr {string} field-valid-class - The class to apply when the field is valid (default: "validation-valid")
  * @attr {string} rule-unmatched-class - The class to apply when the rule's requirement are not met (default: "validation-unmatched")
  * @attr {string} rule-matched-class - The class to apply when the rule's requirement are met (default: "validation-matched")
+ * @attr {string} validation-message - Custom validation message template with {matched} and {total} placeholders (default: "Please match all validation requirements ({matched} of {total})")
  *
  * @fires form-validation-list:validated - Fired when validation completes with details about matched/total rules
  *
@@ -26,7 +27,7 @@ export class FormValidationListElement extends HTMLElement {
 	static #styleId = 'form-validation-list-styles';
 
 	static get observedAttributes() {
-		return ['for'];
+		return ['for', 'validation-message'];
 	}
 
 	static #injectStyles() {
@@ -37,11 +38,14 @@ export class FormValidationListElement extends HTMLElement {
 		const style = document.createElement('style');
 		style.id = FormValidationListElement.#styleId;
 		style.textContent = `
+			form-validation-list {
+				display: block;
+			}
+
 			form-validation-list [data-pattern]::before {
 				content: var(--validation-icon-unmatched, "✗");
 				display: inline-block;
 				width: var(--validation-icon-size, 1em);
-				margin-right: 0.5em;
 				font-size: var(--validation-icon-size, 1em);
 				color: var(--validation-unmatched-color, red);
 			}
@@ -92,6 +96,13 @@ export class FormValidationListElement extends HTMLElement {
 		if (name === 'for' && oldValue !== newValue) {
 			this._cleanup();
 			this._setupValidation();
+		} else if (
+			name === 'validation-message' &&
+			oldValue !== newValue &&
+			this._field
+		) {
+			// Re-validate to update the message
+			this._validateField();
 		}
 	}
 
@@ -301,8 +312,12 @@ export class FormValidationListElement extends HTMLElement {
 		if (isValid) {
 			this._field.setCustomValidity('');
 		} else {
-			const unmatchedCount = this._rules.length - matchedRules;
-			const message = `Please match all validation requirements (${unmatchedCount} remaining)`;
+			const template =
+				this.getAttribute('validation-message') ||
+				'Please match all validation requirements ({matched} of {total})';
+			const message = template
+				.replace('{matched}', matchedRules)
+				.replace('{total}', this._rules.length);
 			this._field.setCustomValidity(message);
 		}
 	}
