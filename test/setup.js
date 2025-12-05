@@ -1,12 +1,15 @@
 import { beforeAll } from 'vitest';
-import { ComponentNameElement } from '../COMPONENT-NAME.js';
+import { FormValidationListElement } from '../form-validation-list.js';
 
 // Define the custom element before tests run
 beforeAll(() => {
-	if (!customElements.get('COMPONENT-NAME')) {
-		customElements.define('COMPONENT-NAME', ComponentNameElement);
+	if (!customElements.get('form-validation-list')) {
+		customElements.define(
+			'form-validation-list',
+			FormValidationListElement,
+		);
 	}
 
 	// Make the class available globally for testing static methods
-	globalThis.ComponentNameElement = ComponentNameElement;
+	globalThis.FormValidationListElement = FormValidationListElement;
 });

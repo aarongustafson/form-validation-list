@@ -1,20 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ComponentNameElement } from '../COMPONENT-NAME.js';
+import { FormValidationListElement } from '../form-validation-list.js';
 
-describe('ComponentNameElement', () => {
+describe('FormValidationListElement', () => {
 	let element;
 
 	beforeEach(() => {
-		element = document.createElement('COMPONENT-NAME');
+		element = document.createElement('form-validation-list');
 		document.body.appendChild(element);
 	});
 
 	it('should be defined', () => {
-		expect(customElements.get('COMPONENT-NAME')).toBe(ComponentNameElement);
+		expect(customElements.get('form-validation-list')).toBe(
+			FormValidationListElement,
+		);
 	});
 
 	it('should create an instance', () => {
-		expect(element).toBeInstanceOf(ComponentNameElement);
+		expect(element).toBeInstanceOf(FormValidationListElement);
 		expect(element).toBeInstanceOf(HTMLElement);
 	});
 

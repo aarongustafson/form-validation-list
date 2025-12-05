@@ -1,2 +1,2 @@
-export { ComponentNameElement } from './COMPONENT-NAME.js';
+export { FormValidationListElement } from './form-validation-list.js';
 import './define.js';

@@ -1,17 +1,17 @@
 /**
- * ComponentNameElement - COMPONENT_DESCRIPTION
+ * FormValidationListElement - A web component comprising a list of validation rules for a field.
  *
- * @element COMPONENT-NAME
+ * @element form-validation-list
  *
  * @attr {string} example-attribute - Description of the attribute
  *
- * @fires COMPONENT-NAME:event-name - Description of the event
+ * @fires form-validation-list:event-name - Description of the event
  *
  * @slot - Default slot for content
  *
  * @cssprop --component-name-color - Description of CSS custom property
  */
-export class ComponentNameElement extends HTMLElement {
+export class FormValidationListElement extends HTMLElement {
 	static get observedAttributes() {
 		return ['example-attribute'];
 	}

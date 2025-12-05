@@ -1,3 +1,3 @@
-import { ComponentNameElement } from './COMPONENT-NAME.js';
+import { FormValidationListElement } from './form-validation-list.js';
 
-customElements.define('COMPONENT-NAME', ComponentNameElement);
+customElements.define('form-validation-list', FormValidationListElement);
