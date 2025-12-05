@@ -7,17 +7,147 @@
 		<link rel="stylesheet" href="./styles.css" />
 		<style>
 			/* Demo-specific styles */
+			.demo-section {
+				margin-bottom: 3rem;
+				padding: 1.5rem;
+				background: #f9f9f9;
+				border-radius: 8px;
+			}
+
+			.code-demo-pair {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 2rem;
+				margin-top: 1rem;
+			}
+
+			@media (max-width: 768px) {
+				.code-demo-pair {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			pre {
+				background: #2d2d2d;
+				color: #f8f8f2;
+				padding: 1rem;
+				border-radius: 4px;
+				overflow-x: auto;
+			}
+
+			code {
+				font-family: 'Courier New', monospace;
+				font-size: 0.9rem;
+			}
+
+			.demo {
+				padding: 1rem;
+				background: white;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+			}
+
+			form {
+				max-width: 500px;
+			}
+
+			label {
+				display: block;
+				margin-bottom: 0.5rem;
+				font-weight: bold;
+			}
+
+			input[type='text'],
+			input[type='password'] {
+				width: 100%;
+				padding: 0.5rem;
+				font-size: 1rem;
+				border: 2px solid #ccc;
+				border-radius: 4px;
+				transition: border-color 0.3s;
+			}
+
+			input.validation-valid {
+				border-color: green;
+			}
+
+			input.validation-invalid {
+				border-color: red;
+			}
+
+			form-validation-list {
+				display: block;
+				margin: 1rem 0;
+				padding: 0.5rem;
+			}
+
+			form-validation-list ul {
+				list-style: none;
+				padding-left: 0;
+			}
+
+			form-validation-list li {
+				padding: 0.25rem 0;
+				transition: all 0.3s ease;
+			}
+
+			/* Custom styling example */
+			.custom-styled {
+				--validation-icon-matched: '✅';
+				--validation-icon-unmatched: '❌';
+				--validation-icon-size: 1.2em;
+				--validation-matched-color: #28a745;
+				--validation-unmatched-color: #dc3545;
+			}
+
+			.custom-styled ul {
+				background: #f0f0f0;
+				padding: 1rem;
+				border-radius: 4px;
+			}
+
+			button {
+				padding: 0.75rem 1.5rem;
+				font-size: 1rem;
+				background: #007bff;
+				color: white;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				margin-top: 1rem;
+			}
+
+			button:hover {
+				background: #0056b3;
+			}
+
+			.validation-message {
+				margin-top: 0.5rem;
+				padding: 0.5rem;
+				border-radius: 4px;
+				font-size: 0.9rem;
+			}
+
+			.validation-message.success {
+				background: #d4edda;
+				color: #155724;
+				border: 1px solid #c3e6cb;
+			}
+
+			.validation-message.error {
+				background: #f8d7da;
+				color: #721c24;
+				border: 1px solid #f5c6cb;
+			}
 		</style>
 	</head>
 	<body>
 		<header>
 			<h1>&lt;form-validation-list&gt;</h1>
 			<p>
-				A web component comprising a list of validation rules for a field. See the
-				<a
-					href="https://github.com/aarongustafson/form-validation-list/blob/main/README.md"
-					>README</a
-				>
+				A web component comprising a list of validation rules for a
+				field. See the
+				<a href="../">README</a>
 				for installation and API documentation.
 			</p>
 		</header>
@@ -25,57 +155,281 @@
 		<main>
 			<!-- Basic Example -->
 			<section>
-				<h2>Basic Example</h2>
-				<p>A simple demonstration of the component.</p>
+				<h2>Basic Password Validation</h2>
+				<p>A password field with multiple validation requirements.</p>
 
 				<div class="demo-section">
-					<h3>Basic Usage</h3>
-					<p>Description of this example.</p>
+					<h3>Username Validation</h3>
+					<p>
+						This example validates a username with capital letters,
+						lowercase letters, and numbers.
+					</p>
 					<div class="code-demo-pair">
-						<pre><code>&lt;form-validation-list&gt;
-  &lt;p&gt;Content goes here&lt;/p&gt;
-&lt;/form-validation-list&gt;</code></pre>
+						<pre><code>&lt;form&gt;
+  &lt;label for="username"&gt;Username:&lt;/label&gt;
+  &lt;input type="text" id="username" name="username" required&gt;
+
+  &lt;form-validation-list for="username"&gt;
+    &lt;ul&gt;
+      &lt;li data-pattern="[A-Z]+"&gt;At least one capital letter&lt;/li&gt;
+      &lt;li data-pattern="[a-z]+"&gt;At least one lowercase letter&lt;/li&gt;
+      &lt;li data-pattern="[\d]+"&gt;At least one number&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/form-validation-list&gt;
+
+  &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</code></pre>
 						<div class="demo">
-							<form-validation-list>
-								<p>Content goes here</p>
-							</form-validation-list>
+							<form id="form1">
+								<label for="username">Username:</label>
+								<input
+									type="text"
+									id="username"
+									name="username"
+									required
+								/>
+
+								<form-validation-list for="username">
+									<ul>
+										<li data-pattern="[A-Z]+">
+											At least one capital letter
+										</li>
+										<li data-pattern="[a-z]+">
+											At least one lowercase letter
+										</li>
+										<li data-pattern="[\d]+">
+											At least one number
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="submit">Submit</button>
+								<div
+									id="message1"
+									class="validation-message"
+									style="display: none"
+								></div>
+							</form>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<!-- Example with Attributes -->
+			<!-- Password Example -->
 			<section>
-				<h2>Example with Attributes</h2>
-				<p>Demonstrating component attributes.</p>
+				<h2>Strong Password Requirements</h2>
+				<p>
+					A more complex validation with length and special character
+					requirements.
+				</p>
 
 				<div class="demo-section">
-					<h3>Using Attributes</h3>
-					<p>Description of this example with attributes.</p>
+					<h3>Password Strength Validation</h3>
+					<p>
+						Demonstrates multiple password requirements including
+						length and special characters.
+					</p>
 					<div class="code-demo-pair">
-						<pre><code>&lt;form-validation-list example-attribute="value"&gt;
-  &lt;p&gt;Content with attributes&lt;/p&gt;
-&lt;/form-validation-list&gt;</code></pre>
+						<pre><code>&lt;form&gt;
+  &lt;label for="password"&gt;Password:&lt;/label&gt;
+  &lt;input type="password" id="password" name="password" required&gt;
+
+  &lt;form-validation-list for="password"&gt;
+    &lt;ul&gt;
+      &lt;li data-pattern=".{8,}"&gt;At least 8 characters&lt;/li&gt;
+      &lt;li data-pattern="[A-Z]+"&gt;At least one uppercase letter&lt;/li&gt;
+      &lt;li data-pattern="[a-z]+"&gt;At least one lowercase letter&lt;/li&gt;
+      &lt;li data-pattern="[\d]+"&gt;At least one number&lt;/li&gt;
+      &lt;li data-pattern="[!@#$%^&*]+"&gt;At least one special character (!@#$%^&*)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/form-validation-list&gt;
+
+  &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</code></pre>
 						<div class="demo">
-							<form-validation-list example-attribute="value">
-								<p>Content with attributes</p>
-							</form-validation-list>
+							<form id="form2">
+								<label for="password">Password:</label>
+								<input
+									type="password"
+									id="password"
+									name="password"
+									required
+								/>
+
+								<form-validation-list for="password">
+									<ul>
+										<li data-pattern=".{8,}">
+											At least 8 characters
+										</li>
+										<li data-pattern="[A-Z]+">
+											At least one uppercase letter
+										</li>
+										<li data-pattern="[a-z]+">
+											At least one lowercase letter
+										</li>
+										<li data-pattern="[\d]+">
+											At least one number
+										</li>
+										<li data-pattern="[!@#$%^&*]+">
+											At least one special character
+											(!@#$%^&*)
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="submit">Submit</button>
+								<div
+									id="message2"
+									class="validation-message"
+									style="display: none"
+								></div>
+							</form>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<!-- API Reference -->
-			<section class="api-reference">
-				<h2>API Reference</h2>
+			<!-- Custom Styling Example -->
+			<section>
+				<h2>Custom Styling with CSS Custom Properties</h2>
+				<p>Customize the appearance using CSS custom properties.</p>
+
+				<div class="demo-section">
+					<h3>Custom Icons and Colors</h3>
+					<p>
+						This example uses custom emojis and colors for the
+						validation icons.
+					</p>
+					<div class="code-demo-pair">
+						<pre><code>&lt;style&gt;
+  .custom-styled {
+    --validation-icon-matched: "✅";
+    --validation-icon-unmatched: "❌";
+    --validation-icon-size: 1.2em;
+    --validation-matched-color: #28a745;
+    --validation-unmatched-color: #dc3545;
+  }
+&lt;/style&gt;
+
+&lt;form&gt;
+  &lt;label for="email"&gt;Email:&lt;/label&gt;
+  &lt;input type="text" id="email" name="email" required&gt;
+
+  &lt;form-validation-list for="email" class="custom-styled"&gt;
+    &lt;ul&gt;
+      &lt;li data-pattern=".+@.+"&gt;Contains @ symbol&lt;/li&gt;
+      &lt;li data-pattern=".+@.+\..+"&gt;Valid email format&lt;/li&gt;
+      &lt;li data-pattern=".{6,}"&gt;At least 6 characters&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/form-validation-list&gt;
+
+  &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+						<div class="demo">
+							<form id="form3">
+								<label for="email">Email:</label>
+								<input
+									type="text"
+									id="email"
+									name="email"
+									required
+								/>
+
+								<form-validation-list
+									for="email"
+									class="custom-styled"
+								>
+									<ul>
+										<li data-pattern=".+@.+">
+											Contains @ symbol
+										</li>
+										<li data-pattern=".+@.+\..+">
+											Valid email format
+										</li>
+										<li data-pattern=".{6,}">
+											At least 6 characters
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="submit">Submit</button>
+								<div
+									id="message3"
+									class="validation-message"
+									style="display: none"
+								></div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Event Listener Example -->
+			<section>
+				<h2>JavaScript API</h2>
 				<p>
-					For complete documentation of attributes, events, and
-					browser support, see the
-					<a
-						href="https://github.com/aarongustafson/form-validation-list/blob/main/README.md"
-						>README</a
-					>.
+					Listening to validation events and using the programmatic
+					API.
 				</p>
+
+				<div class="demo-section">
+					<h3>Event-Driven Validation</h3>
+					<p>
+						This example shows how to listen to validation events.
+					</p>
+					<div class="code-demo-pair">
+						<pre><code>&lt;script&gt;
+  const validationList = document.querySelector('#api-validation');
+
+  validationList.addEventListener('form-validation-list:validated', (e) =&gt; {
+    const { isValid, matchedRules, totalRules } = e.detail;
+    console.log(`Matched ${matchedRules} of ${totalRules} rules`);
+  });
+
+  // Programmatically trigger validation
+  const isValid = validationList.validate();
+  console.log('Is valid:', isValid);
+
+  // Check current state
+  console.log('Current state:', validationList.isValid);
+&lt;/script&gt;</code></pre>
+						<div class="demo">
+							<form id="form4">
+								<label for="api-field">Test Field:</label>
+								<input
+									type="text"
+									id="api-field"
+									name="api-field"
+									required
+								/>
+
+								<form-validation-list
+									for="api-field"
+									id="api-validation"
+								>
+									<ul>
+										<li data-pattern="^[a-zA-Z]+$">
+											Only letters
+										</li>
+										<li data-pattern=".{3,}">
+											At least 3 characters
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="button" id="check-validity">
+									Check Validity
+								</button>
+								<button type="submit">Submit</button>
+								<div
+									id="message4"
+									class="validation-message"
+									style="display: none"
+								></div>
+							</form>
+						</div>
+					</div>
+				</div>
 			</section>
 		</main>
 
@@ -90,6 +444,109 @@
 			</p>
 		</footer>
 
-		<script src="../define.js" type="module"></script>
+		<script type="module">
+			import '../define.js';
+
+			// Form 1: Username validation
+			const form1 = document.getElementById('form1');
+			const message1 = document.getElementById('message1');
+
+			form1.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const isValid = form1.checkValidity();
+				message1.style.display = 'block';
+
+				if (isValid) {
+					message1.className = 'validation-message success';
+					message1.textContent = '✓ Username is valid!';
+				} else {
+					message1.className = 'validation-message error';
+					message1.textContent =
+						'✗ Please meet all validation requirements.';
+				}
+			});
+
+			// Form 2: Password validation
+			const form2 = document.getElementById('form2');
+			const message2 = document.getElementById('message2');
+
+			form2.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const isValid = form2.checkValidity();
+				message2.style.display = 'block';
+
+				if (isValid) {
+					message2.className = 'validation-message success';
+					message2.textContent = '✓ Password is strong!';
+				} else {
+					message2.className = 'validation-message error';
+					message2.textContent =
+						'✗ Please meet all validation requirements.';
+				}
+			});
+
+			// Form 3: Email validation
+			const form3 = document.getElementById('form3');
+			const message3 = document.getElementById('message3');
+
+			form3.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const isValid = form3.checkValidity();
+				message3.style.display = 'block';
+
+				if (isValid) {
+					message3.className = 'validation-message success';
+					message3.textContent = '✓ Email is valid!';
+				} else {
+					message3.className = 'validation-message error';
+					message3.textContent =
+						'✗ Please meet all validation requirements.';
+				}
+			});
+
+			// Form 4: API demonstration
+			const form4 = document.getElementById('form4');
+			const message4 = document.getElementById('message4');
+			const validationList = document.getElementById('api-validation');
+			const checkButton = document.getElementById('check-validity');
+
+			validationList.addEventListener(
+				'form-validation-list:validated',
+				(e) => {
+					const { isValid, matchedRules, totalRules } = e.detail;
+					console.log(
+						`Validation event: ${matchedRules}/${totalRules} rules matched. Valid: ${isValid}`,
+					);
+				},
+			);
+
+			checkButton.addEventListener('click', () => {
+				const isValid = validationList.validate();
+				message4.style.display = 'block';
+
+				if (isValid) {
+					message4.className = 'validation-message success';
+					message4.textContent = `✓ Field is valid! (isValid property: ${validationList.isValid})`;
+				} else {
+					message4.className = 'validation-message error';
+					message4.textContent = `✗ Field is not valid. (isValid property: ${validationList.isValid})`;
+				}
+			});
+
+			form4.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const isValid = form4.checkValidity();
+				message4.style.display = 'block';
+
+				if (isValid) {
+					message4.className = 'validation-message success';
+					message4.textContent = '✓ Form is valid!';
+				} else {
+					message4.className = 'validation-message error';
+					message4.textContent =
+						'✗ Please meet all validation requirements.';
+				}
+			});
+		</script>
 	</body>
 </html>
