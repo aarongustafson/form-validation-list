@@ -6,81 +6,7 @@
 		<title>&lt;form-validation-list&gt; Web Component Demo</title>
 		<link rel="stylesheet" href="./styles.css" />
 		<style>
-			/* Demo-specific styles */
-			.demo-section {
-				margin-bottom: 3rem;
-				padding: 1.5rem;
-				background: #f9f9f9;
-				border-radius: 8px;
-			}
-
-			.code-demo-pair {
-				display: grid;
-				grid-template-columns: 1fr 1fr;
-				gap: 2rem;
-				margin-top: 1rem;
-			}
-
-			@media (max-width: 768px) {
-				.code-demo-pair {
-					grid-template-columns: 1fr;
-				}
-			}
-
-			pre {
-				background: #2d2d2d;
-				color: #f8f8f2;
-				padding: 1rem;
-				border-radius: 4px;
-				overflow-x: auto;
-			}
-
-			code {
-				font-family: 'Courier New', monospace;
-				font-size: 0.9rem;
-			}
-
-			.demo {
-				padding: 1rem;
-				background: white;
-				border: 1px solid #ddd;
-				border-radius: 4px;
-			}
-
-			form {
-				max-width: 500px;
-			}
-
-			label {
-				display: block;
-				margin-bottom: 0.5rem;
-				font-weight: bold;
-			}
-
-			input[type='text'],
-			input[type='password'] {
-				width: 100%;
-				padding: 0.5rem;
-				font-size: 1rem;
-				border: 2px solid #ccc;
-				border-radius: 4px;
-				transition: border-color 0.3s;
-			}
-
-			input.validation-valid {
-				border-color: green;
-			}
-
-			input.validation-invalid {
-				border-color: red;
-			}
-
-			form-validation-list {
-				display: block;
-				margin: 1rem 0;
-				padding: 0.5rem;
-			}
-
+			/* Component-specific validation styles */
 			form-validation-list ul {
 				list-style: none;
 				padding-left: 0;
@@ -101,43 +27,9 @@
 			}
 
 			.custom-styled ul {
-				background: #f0f0f0;
+				background: ButtonFace;
 				padding: 1rem;
 				border-radius: 4px;
-			}
-
-			button {
-				padding: 0.75rem 1.5rem;
-				font-size: 1rem;
-				background: #007bff;
-				color: white;
-				border: none;
-				border-radius: 4px;
-				cursor: pointer;
-				margin-top: 1rem;
-			}
-
-			button:hover {
-				background: #0056b3;
-			}
-
-			.validation-message {
-				margin-top: 0.5rem;
-				padding: 0.5rem;
-				border-radius: 4px;
-				font-size: 0.9rem;
-			}
-
-			.validation-message.success {
-				background: #d4edda;
-				color: #155724;
-				border: 1px solid #c3e6cb;
-			}
-
-			.validation-message.error {
-				background: #f8d7da;
-				color: #721c24;
-				border: 1px solid #f5c6cb;
 			}
 		</style>
 	</head>
@@ -431,6 +323,94 @@
 					</div>
 				</div>
 			</section>
+
+			<!-- Internationalization Example -->
+			<section>
+				<h2>Internationalization (i18n)</h2>
+				<p>
+					The <code>validation-message</code> attribute allows you to
+					customize the error message shown by the browser, including
+					support for other languages.
+				</p>
+
+				<div class="demo-section">
+					<h3>Spanish Validation Messages</h3>
+					<p>
+						Using
+						<code
+							>validation-message="Por favor, cumple todos los
+							requisitos ({matched} de {total})"</code
+						>
+						displays the validation error in Spanish.
+					</p>
+					<div class="code-demo-pair">
+						<pre><code>&lt;form&gt;
+  &lt;label for="contrasena"&gt;Contraseña:&lt;/label&gt;
+  &lt;input 
+    type="password" 
+    id="contrasena" 
+    name="contrasena" 
+    required&gt;
+
+  &lt;form-validation-list 
+    for="contrasena"
+    validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"&gt;
+    &lt;ul&gt;
+      &lt;li data-pattern="[A-Z]+"&gt;Al menos una letra mayúscula&lt;/li&gt;
+      &lt;li data-pattern="[a-z]+"&gt;Al menos una letra minúscula&lt;/li&gt;
+      &lt;li data-pattern="[\d]+"&gt;Al menos un número&lt;/li&gt;
+      &lt;li data-pattern="[!@#$%^&amp;*]+"&gt;Al menos un carácter especial (!@#$%^&amp;*)&lt;/li&gt;
+      &lt;li data-pattern=".{8,}"&gt;Al menos 8 caracteres&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/form-validation-list&gt;
+
+  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+						<div class="demo">
+							<form id="form5">
+								<label for="contrasena">Contraseña:</label>
+								<input
+									type="password"
+									id="contrasena"
+									name="contrasena"
+									required
+								/>
+
+								<form-validation-list
+									for="contrasena"
+									validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"
+								>
+									<ul>
+										<li data-pattern="[A-Z]+">
+											Al menos una letra mayúscula
+										</li>
+										<li data-pattern="[a-z]+">
+											Al menos una letra minúscula
+										</li>
+										<li data-pattern="[\d]+">
+											Al menos un número
+										</li>
+										<li data-pattern="[!@#$%^&*]+">
+											Al menos un carácter especial
+											(!@#$%^&*)
+										</li>
+										<li data-pattern=".{8,}">
+											Al menos 8 caracteres
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="submit">Enviar</button>
+								<div
+									id="message5"
+									class="validation-message"
+									style="display: none"
+								></div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
 		</main>
 
 		<footer>
@@ -545,6 +525,25 @@
 					message4.className = 'validation-message error';
 					message4.textContent =
 						'✗ Please meet all validation requirements.';
+				}
+			});
+
+			// Form 5: Spanish validation
+			const form5 = document.getElementById('form5');
+			const message5 = document.getElementById('message5');
+
+			form5.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const isValid = form5.checkValidity();
+				message5.style.display = 'block';
+
+				if (isValid) {
+					message5.className = 'validation-message success';
+					message5.textContent = '✓ ¡La contraseña es válida!';
+				} else {
+					message5.className = 'validation-message error';
+					message5.textContent =
+						'✗ Por favor, cumple todos los requisitos.';
 				}
 			});
 		</script>
