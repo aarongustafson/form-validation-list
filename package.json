@@ -1,6 +1,6 @@
 {
 	"name": "@aarongustafson/form-validation-list",
-	"version": "1.0.1",
+	"version": "2.0.0",
 	"description": "A web component comprising a list of validation rules for a field.",
 	"keywords": [
 		"html",
