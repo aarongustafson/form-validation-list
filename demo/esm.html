@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>form-validation-list via esm.sh</title>
+		<style>
+			body {
+				font-family: system-ui, sans-serif;
+				margin: 2rem;
+				line-height: 1.5;
+			}
+
+			form-validation-list {
+				display: block;
+				max-width: 480px;
+			}
+
+			label,
+			input {
+				display: block;
+				width: 100%;
+				font: inherit;
+				margin-block: 0.5rem;
+			}
+
+			input {
+				padding: 0.5rem;
+			}
+
+			form-validation-list ul {
+				padding-left: 1.25rem;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>esm.sh CDN sanity check</h1>
+		<p>
+			This page loads the component class from <code>esm.sh</code> and
+			registers it manually.
+		</p>
+
+		<label for="password">Password</label>
+		<input type="password" id="password" name="password" />
+
+		<form-validation-list for="password">
+			<ul>
+				<li data-pattern=".{8,}">At least 8 characters</li>
+				<li data-pattern="[A-Z]+">One uppercase letter</li>
+				<li data-pattern="[\d]+">One number</li>
+			</ul>
+		</form-validation-list>
+
+		<script type="module">
+			import { FormValidationListElement } from 'https://esm.sh/@aarongustafson/form-validation-list@2.0.0/form-validation-list.js?bundle&target=es2022';
+
+			if (!customElements.get('form-validation-list')) {
+				customElements.define(
+					'form-validation-list',
+					FormValidationListElement,
+				);
+			}
+		</script>
+	</body>
+</html>

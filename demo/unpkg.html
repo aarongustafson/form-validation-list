@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>form-validation-list via unpkg</title>
+		<style>
+			body {
+				font-family: system-ui, sans-serif;
+				margin: 2rem;
+				line-height: 1.5;
+			}
+
+			form-validation-list {
+				display: block;
+				max-width: 480px;
+			}
+
+			label,
+			input {
+				display: block;
+				width: 100%;
+				font: inherit;
+				margin-block: 0.5rem;
+			}
+
+			input {
+				padding: 0.5rem;
+			}
+
+			form-validation-list ul {
+				padding-left: 1.25rem;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>unpkg CDN sanity check</h1>
+		<p>
+			This page loads the guarded definition helper from
+			<code>unpkg</code> and registers the element when supported.
+		</p>
+
+		<label for="password">Password</label>
+		<input type="password" id="password" name="password" />
+
+		<form-validation-list for="password">
+			<ul>
+				<li data-pattern=".{8,}">At least 8 characters</li>
+				<li data-pattern="[A-Z]+">One uppercase letter</li>
+				<li data-pattern="[\d]+">One number</li>
+			</ul>
+		</form-validation-list>
+
+		<script type="module">
+			import { defineFormValidationList } from 'https://unpkg.com/@aarongustafson/form-validation-list@latest/define.js?module';
+
+			defineFormValidationList();
+		</script>
+	</body>
+</html>
