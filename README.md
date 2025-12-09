@@ -18,6 +18,10 @@ A web component that provides visual validation feedback for form fields using a
 
 [Live Demo](https://aarongustafson.github.io/form-validation-list/demo/) ([Source](./demo/index.html))
 
+Additional examples:
+- [ESM CDN (esm.sh)](https://aarongustafson.github.io/form-validation-list/demo/esm.html) ([Source](./demo/esm.html))
+- [unpkg CDN](https://aarongustafson.github.io/form-validation-list/demo/unpkg.html) ([Source](./demo/unpkg.html))
+
 ## Installation
 
 ```bash
