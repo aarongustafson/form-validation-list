@@ -266,71 +266,71 @@ describe('FormValidationListElement', () => {
 			expect(element.ruleMatchedClass).toBe('custom-matched');
 		});
 
-			it('should rebind validation handler when trigger-event changes', async () => {
-				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
-				element.setAttribute('each-delay', '0');
-				element.disconnectedCallback();
-				element.connectedCallback();
+		it('should rebind validation handler when trigger-event changes', async () => {
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+			element.setAttribute('each-delay', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
 
-				element.setAttribute('trigger-event', 'change');
-				input.value = 'TEST';
-				input.dispatchEvent(new Event('change'));
+			element.setAttribute('trigger-event', 'change');
+			input.value = 'TEST';
+			input.dispatchEvent(new Event('change'));
 
-				await waitFor(() => {
-					expect(
-						element
-							.querySelector('[data-pattern]')
-							.classList.contains('validation-matched'),
-					).toBe(true);
-				});
+			await waitFor(() => {
+				expect(
+					element
+						.querySelector('[data-pattern]')
+						.classList.contains('validation-matched'),
+				).toBe(true);
+			});
+		});
+
+		it('should refresh field classes when field-valid-class changes', async () => {
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+			element.setAttribute('each-delay', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'TEST';
+			input.dispatchEvent(new Event('input'));
+			await waitFor(() => {
+				expect(input.classList.contains('validation-valid')).toBe(true);
 			});
 
-			it('should refresh field classes when field-valid-class changes', async () => {
-				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
-				element.setAttribute('each-delay', '0');
-				element.disconnectedCallback();
-				element.connectedCallback();
+			element.setAttribute('field-valid-class', 'custom-good');
+			await waitFor(() => {
+				expect(input.classList.contains('custom-good')).toBe(true);
+				expect(input.classList.contains('validation-valid')).toBe(
+					false,
+				);
+			});
+		});
 
-				input.value = 'TEST';
-				input.dispatchEvent(new Event('input'));
-				await waitFor(() => {
-					expect(input.classList.contains('validation-valid')).toBe(true);
-				});
+		it('should refresh rule classes when rule-matched-class changes', async () => {
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+			element.setAttribute('each-delay', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
 
-				element.setAttribute('field-valid-class', 'custom-good');
-				await waitFor(() => {
-					expect(input.classList.contains('custom-good')).toBe(true);
-					expect(input.classList.contains('validation-valid')).toBe(
-						false,
-					);
-				});
+			input.value = 'TEST';
+			input.dispatchEvent(new Event('input'));
+			await waitFor(() => {
+				expect(
+					element
+						.querySelector('[data-pattern]')
+						.classList.contains('validation-matched'),
+				).toBe(true);
 			});
 
-			it('should refresh rule classes when rule-matched-class changes', async () => {
-				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
-				element.setAttribute('each-delay', '0');
-				element.disconnectedCallback();
-				element.connectedCallback();
-
-				input.value = 'TEST';
-				input.dispatchEvent(new Event('input'));
-				await waitFor(() => {
-					expect(
-						element
-							.querySelector('[data-pattern]')
-							.classList.contains('validation-matched'),
-					).toBe(true);
-				});
-
-				element.setAttribute('rule-matched-class', 'custom-match');
-				await waitFor(() => {
-					const rule = element.querySelector('[data-pattern]');
-					expect(rule.classList.contains('custom-match')).toBe(true);
-					expect(rule.classList.contains('validation-matched')).toBe(
-						false,
-					);
-				});
+			element.setAttribute('rule-matched-class', 'custom-match');
+			await waitFor(() => {
+				const rule = element.querySelector('[data-pattern]');
+				expect(rule.classList.contains('custom-match')).toBe(true);
+				expect(rule.classList.contains('validation-matched')).toBe(
+					false,
+				);
 			});
+		});
 	});
 
 	describe('public API', () => {

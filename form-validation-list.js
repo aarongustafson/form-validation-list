@@ -198,9 +198,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	set triggerEvent(value) {
 		const normalized =
-			value === null || value === undefined
-				? ''
-				: String(value).trim();
+			value === null || value === undefined ? '' : String(value).trim();
 		if (normalized) {
 			this.setAttribute('trigger-event', normalized);
 		} else {
@@ -236,9 +234,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	set fieldInvalidClass(value) {
 		const normalized =
-			value === null || value === undefined
-				? ''
-				: String(value).trim();
+			value === null || value === undefined ? '' : String(value).trim();
 		if (normalized) {
 			this.setAttribute('field-invalid-class', normalized);
 		} else {
@@ -256,9 +252,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	set fieldValidClass(value) {
 		const normalized =
-			value === null || value === undefined
-				? ''
-				: String(value).trim();
+			value === null || value === undefined ? '' : String(value).trim();
 		if (normalized) {
 			this.setAttribute('field-valid-class', normalized);
 		} else {
@@ -276,9 +270,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	set ruleUnmatchedClass(value) {
 		const normalized =
-			value === null || value === undefined
-				? ''
-				: String(value).trim();
+			value === null || value === undefined ? '' : String(value).trim();
 		if (normalized) {
 			this.setAttribute('rule-unmatched-class', normalized);
 		} else {
@@ -296,9 +288,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	set ruleMatchedClass(value) {
 		const normalized =
-			value === null || value === undefined
-				? ''
-				: String(value).trim();
+			value === null || value === undefined ? '' : String(value).trim();
 		if (normalized) {
 			this.setAttribute('rule-matched-class', normalized);
 		} else {
@@ -312,9 +302,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	set validationMessage(value) {
 		const normalized =
-			value === null || value === undefined
-				? ''
-				: String(value);
+			value === null || value === undefined ? '' : String(value);
 		if (normalized) {
 			this.setAttribute('validation-message', normalized);
 		} else {
@@ -446,21 +434,14 @@ export class FormValidationListElement extends HTMLElement {
 		if (!this._field || !this._validationHandler) {
 			return;
 		}
-		const previousEvent =
-			this._currentTriggerEvent || oldValue || 'input';
+		const previousEvent = this._currentTriggerEvent || oldValue || 'input';
 		const nextEvent = this.triggerEvent;
 		if (previousEvent === nextEvent) {
 			return;
 		}
-		this._field.removeEventListener(
-			previousEvent,
-			this._validationHandler,
-		);
+		this._field.removeEventListener(previousEvent, this._validationHandler);
 		this._currentTriggerEvent = nextEvent;
-		this._field.addEventListener(
-			nextEvent,
-			this._validationHandler,
-		);
+		this._field.addEventListener(nextEvent, this._validationHandler);
 	}
 
 	_clearPendingTimeouts() {
