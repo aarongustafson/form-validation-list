@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { waitFor } from '@testing-library/dom';
 import { FormValidationListElement } from '../form-validation-list.js';
 
 describe('FormValidationListElement', () => {
@@ -73,6 +74,50 @@ describe('FormValidationListElement', () => {
 		expect(describedBy).toContain(element.id);
 	});
 
+	describe('property reflection', () => {
+		it('should reflect fieldId property to the for attribute', () => {
+			const otherInput = document.createElement('input');
+			otherInput.id = 'other-input';
+			document.body.appendChild(otherInput);
+
+			const localElement = document.createElement('form-validation-list');
+			document.body.appendChild(localElement);
+
+			localElement.fieldId = 'other-input';
+			expect(localElement.getAttribute('for')).toBe('other-input');
+		});
+
+		it('should reflect triggerEvent property to the attribute', () => {
+			const localElement = document.createElement('form-validation-list');
+			localElement.triggerEvent = 'change';
+			expect(localElement.getAttribute('trigger-event')).toBe('change');
+		});
+
+		it('should upgrade properties set before connecting', async () => {
+			const upgradeInput = document.createElement('input');
+			upgradeInput.id = 'upgrade-input';
+			document.body.appendChild(upgradeInput);
+
+			const localElement = document.createElement('form-validation-list');
+			localElement.fieldId = 'upgrade-input';
+			localElement.triggerEvent = 'change';
+			localElement.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
+			localElement.setAttribute('each-delay', '0');
+			document.body.appendChild(localElement);
+
+			upgradeInput.value = 'TEST';
+			upgradeInput.dispatchEvent(new Event('change'));
+
+			await waitFor(() => {
+				expect(
+					localElement
+						.querySelector('[data-pattern]')
+						.classList.contains('validation-matched'),
+				).toBe(true);
+			});
+		});
+	});
+
 	describe('validation rules', () => {
 		beforeEach(() => {
 			element.innerHTML = `
@@ -82,6 +127,7 @@ describe('FormValidationListElement', () => {
 					<li data-pattern="[0-9]+">At least one number</li>
 				</ul>
 			`;
+			element.setAttribute('each-delay', '0');
 
 			// Trigger connectedCallback again to pick up new rules
 			element.disconnectedCallback();
@@ -99,69 +145,68 @@ describe('FormValidationListElement', () => {
 			});
 		});
 
-		it('should validate input value against rules', () => {
+		it('should validate input value against rules', async () => {
 			input.value = 'Test123';
 			input.dispatchEvent(new Event('input'));
 
-			// Wait for async validation
-			setTimeout(() => {
+			await waitFor(() => {
 				const rules = element.querySelectorAll('[data-pattern]');
 				expect(rules[0].classList.contains('validation-matched')).toBe(
 					true,
-				); // Capital
+				);
 				expect(rules[1].classList.contains('validation-matched')).toBe(
 					true,
-				); // Lowercase
+				);
 				expect(rules[2].classList.contains('validation-matched')).toBe(
 					true,
-				); // Number
-			}, 500);
+				);
+			});
 		});
 
-		it('should mark unmatched rules', () => {
+		it('should mark unmatched rules', async () => {
 			input.value = 'test'; // Only lowercase
 			input.dispatchEvent(new Event('input'));
 
-			setTimeout(() => {
+			await waitFor(() => {
 				const rules = element.querySelectorAll('[data-pattern]');
 				expect(
 					rules[0].classList.contains('validation-unmatched'),
-				).toBe(true); // No capital
+				).toBe(true);
 				expect(rules[1].classList.contains('validation-matched')).toBe(
 					true,
-				); // Lowercase
+				);
 				expect(
 					rules[2].classList.contains('validation-unmatched'),
-				).toBe(true); // No number
-			}, 500);
+				).toBe(true);
+			});
 		});
 
-		it('should add validation classes to the input field', () => {
+		it('should add validation classes to the input field', async () => {
 			input.value = 'Test123';
 			input.dispatchEvent(new Event('input'));
 
-			setTimeout(() => {
+			await waitFor(() => {
 				expect(input.classList.contains('validation-valid')).toBe(true);
 				expect(input.classList.contains('validation-invalid')).toBe(
 					false,
 				);
-			}, 500);
+			});
 		});
 
-		it('should update field custom validity', () => {
+		it('should update field custom validity', async () => {
 			input.value = 'test'; // Invalid
 			input.dispatchEvent(new Event('input'));
 
-			setTimeout(() => {
+			await waitFor(() => {
 				expect(input.validationMessage).toBeTruthy();
-			}, 500);
+			});
 
 			input.value = 'Test123'; // Valid
 			input.dispatchEvent(new Event('input'));
 
-			setTimeout(() => {
+			await waitFor(() => {
 				expect(input.validationMessage).toBe('');
-			}, 500);
+			});
 		});
 
 		it('should fire validation event', () => {
@@ -220,6 +265,72 @@ describe('FormValidationListElement', () => {
 			expect(element.ruleUnmatchedClass).toBe('custom-unmatched');
 			expect(element.ruleMatchedClass).toBe('custom-matched');
 		});
+
+			it('should rebind validation handler when trigger-event changes', async () => {
+				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+				element.setAttribute('each-delay', '0');
+				element.disconnectedCallback();
+				element.connectedCallback();
+
+				element.setAttribute('trigger-event', 'change');
+				input.value = 'TEST';
+				input.dispatchEvent(new Event('change'));
+
+				await waitFor(() => {
+					expect(
+						element
+							.querySelector('[data-pattern]')
+							.classList.contains('validation-matched'),
+					).toBe(true);
+				});
+			});
+
+			it('should refresh field classes when field-valid-class changes', async () => {
+				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+				element.setAttribute('each-delay', '0');
+				element.disconnectedCallback();
+				element.connectedCallback();
+
+				input.value = 'TEST';
+				input.dispatchEvent(new Event('input'));
+				await waitFor(() => {
+					expect(input.classList.contains('validation-valid')).toBe(true);
+				});
+
+				element.setAttribute('field-valid-class', 'custom-good');
+				await waitFor(() => {
+					expect(input.classList.contains('custom-good')).toBe(true);
+					expect(input.classList.contains('validation-valid')).toBe(
+						false,
+					);
+				});
+			});
+
+			it('should refresh rule classes when rule-matched-class changes', async () => {
+				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+				element.setAttribute('each-delay', '0');
+				element.disconnectedCallback();
+				element.connectedCallback();
+
+				input.value = 'TEST';
+				input.dispatchEvent(new Event('input'));
+				await waitFor(() => {
+					expect(
+						element
+							.querySelector('[data-pattern]')
+							.classList.contains('validation-matched'),
+					).toBe(true);
+				});
+
+				element.setAttribute('rule-matched-class', 'custom-match');
+				await waitFor(() => {
+					const rule = element.querySelector('[data-pattern]');
+					expect(rule.classList.contains('custom-match')).toBe(true);
+					expect(rule.classList.contains('validation-matched')).toBe(
+						false,
+					);
+				});
+			});
 	});
 
 	describe('public API', () => {
@@ -252,13 +363,17 @@ describe('FormValidationListElement', () => {
 	});
 
 	describe('cleanup', () => {
-		it('should cleanup when disconnected', () => {
+		it('should cleanup when disconnected', async () => {
 			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
+			element.setAttribute('each-delay', '0');
 			element.disconnectedCallback();
 			element.connectedCallback();
 
 			input.value = 'Test';
 			input.dispatchEvent(new Event('input'));
+			await waitFor(() => {
+				expect(input.classList.contains('validation-valid')).toBe(true);
+			});
 
 			element.disconnectedCallback();
 
