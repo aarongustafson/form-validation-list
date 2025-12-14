@@ -14,6 +14,13 @@ A web component that provides visual validation feedback for form fields using a
 - **Event-driven** - Fires custom events for programmatic interaction
 - **Visual feedback** - Animated cascade effect when validating rules
 
+## TypeScript & Framework Support
+
+- Ships with bundled `.d.ts` definitions so editors and TypeScript builds understand `FormValidationListElement` and `defineFormValidationList`.
+- `for`, `trigger-event`, `each-delay`, and every class-related attribute now reflect between properties and attributes, keeping reactive frameworks and declarative templates in sync with DOM state.
+- An internal `_upgradeProperty` helper captures properties that were assigned before the element upgraded, ensuring early property sets (common in SSR or JSX) are not lost.
+- The `HTMLElementTagNameMap` is augmented so `document.querySelector('form-validation-list')` is strongly typed in TS/JSX projects.
+
 ## Demo
 
 [Live Demo](https://aarongustafson.github.io/form-validation-list/demo/) ([Source](./demo/index.html))

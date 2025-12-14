@@ -20,13 +20,16 @@
 	"type": "module",
 	"main": "index.js",
 	"module": "form-validation-list.js",
+	"types": "form-validation-list.d.ts",
 	"customElements": "custom-elements.json",
 	"exports": {
 		".": {
-			"import": "./index.js"
+			"import": "./index.js",
+			"types": "./form-validation-list.d.ts"
 		},
 		"./form-validation-list.js": {
-			"import": "./form-validation-list.js"
+			"import": "./form-validation-list.js",
+			"types": "./form-validation-list.d.ts"
 		},
 		"./define.js": {
 			"import": "./define.js"
@@ -35,6 +38,7 @@
 	},
 	"files": [
 		"form-validation-list.js",
+		"form-validation-list.d.ts",
 		"define.js",
 		"index.js",
 		"custom-elements.json",
