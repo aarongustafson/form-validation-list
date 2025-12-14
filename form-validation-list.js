@@ -27,7 +27,16 @@ export class FormValidationListElement extends HTMLElement {
 	static #styleId = 'form-validation-list-styles';
 
 	static get observedAttributes() {
-		return ['for', 'validation-message'];
+		return [
+			'for',
+			'trigger-event',
+			'each-delay',
+			'field-invalid-class',
+			'field-valid-class',
+			'rule-unmatched-class',
+			'rule-matched-class',
+			'validation-message',
+		];
 	}
 
 	static #injectStyles() {
@@ -80,9 +89,20 @@ export class FormValidationListElement extends HTMLElement {
 		this._invalidClasses = null;
 		this._matchedClasses = null;
 		this._unmatchedClasses = null;
+		this._pendingTimeouts = new Set();
+		this._currentTriggerEvent = null;
 	}
 
 	connectedCallback() {
+		this.__upgradeProperty('for');
+		this.__upgradeProperty('fieldId');
+		this.__upgradeProperty('triggerEvent');
+		this.__upgradeProperty('eachDelay');
+		this.__upgradeProperty('fieldInvalidClass');
+		this.__upgradeProperty('fieldValidClass');
+		this.__upgradeProperty('ruleUnmatchedClass');
+		this.__upgradeProperty('ruleMatchedClass');
+		this.__upgradeProperty('validationMessage');
 		this.setAttribute('role', 'list');
 		FormValidationListElement.#injectStyles();
 		this._setupValidation();
@@ -93,16 +113,81 @@ export class FormValidationListElement extends HTMLElement {
 	}
 
 	attributeChangedCallback(name, oldValue, newValue) {
-		if (name === 'for' && oldValue !== newValue) {
-			this._cleanup();
-			this._setupValidation();
-		} else if (
-			name === 'validation-message' &&
-			oldValue !== newValue &&
-			this._field
-		) {
-			// Re-validate to update the message
-			this._validateField();
+		if (oldValue === newValue) {
+			return;
+		}
+
+		switch (name) {
+			case 'for':
+				if (this.isConnected) {
+					this._cleanup();
+					this._setupValidation();
+				}
+				break;
+			case 'validation-message':
+				if (this._field) {
+					this._validateField();
+				}
+				break;
+			case 'trigger-event':
+				this.__rebindValidationHandler(oldValue);
+				break;
+			case 'each-delay':
+				this._clearPendingTimeouts();
+				if (this._field) {
+					this._validateField();
+				}
+				break;
+			case 'field-invalid-class':
+				this.__handleFieldClassChange(
+					oldValue,
+					'validation-invalid',
+					'_invalidClasses',
+				);
+				break;
+			case 'field-valid-class':
+				this.__handleFieldClassChange(
+					oldValue,
+					'validation-valid',
+					'_validClasses',
+				);
+				break;
+			case 'rule-unmatched-class':
+				this.__handleRuleClassChange(
+					oldValue,
+					'validation-unmatched',
+					'_unmatchedClasses',
+				);
+				break;
+			case 'rule-matched-class':
+				this.__handleRuleClassChange(
+					oldValue,
+					'validation-matched',
+					'_matchedClasses',
+				);
+				break;
+			default:
+				break;
+		}
+	}
+
+	get ['for']() {
+		return this.fieldId;
+	}
+
+	set ['for'](value) {
+		this.fieldId = value;
+	}
+
+	get fieldId() {
+		return this.getAttribute('for');
+	}
+
+	set fieldId(value) {
+		if (value === null || value === undefined || value === '') {
+			this.removeAttribute('for');
+		} else {
+			this.setAttribute('for', String(value));
 		}
 	}
 
@@ -111,49 +196,142 @@ export class FormValidationListElement extends HTMLElement {
 		return this.getAttribute('trigger-event') || 'input';
 	}
 
+	set triggerEvent(value) {
+		const normalized =
+			value === null || value === undefined
+				? ''
+				: String(value).trim();
+		if (normalized) {
+			this.setAttribute('trigger-event', normalized);
+		} else {
+			this.removeAttribute('trigger-event');
+		}
+	}
+
 	get eachDelay() {
-		return parseInt(this.getAttribute('each-delay') || '150', 10);
+		const attrValue = this.getAttribute('each-delay');
+		if (attrValue === null || attrValue === undefined || attrValue === '') {
+			return 150;
+		}
+		const parsed = Number(attrValue);
+		return Number.isFinite(parsed) && parsed >= 0 ? parsed : 150;
+	}
+
+	set eachDelay(value) {
+		const parsed = Number(value);
+		if (Number.isFinite(parsed) && parsed >= 0) {
+			this.setAttribute('each-delay', String(parsed));
+		} else {
+			this.removeAttribute('each-delay');
+		}
 	}
 
 	get fieldInvalidClass() {
-		if (!this._invalidClasses) {
-			this._invalidClasses =
-				this.getAttribute('field-invalid-class') ||
-				'validation-invalid';
+		if (this._invalidClasses === null) {
+			const attr = this.getAttribute('field-invalid-class');
+			this._invalidClasses = attr || 'validation-invalid';
 		}
 		return this._invalidClasses;
 	}
 
+	set fieldInvalidClass(value) {
+		const normalized =
+			value === null || value === undefined
+				? ''
+				: String(value).trim();
+		if (normalized) {
+			this.setAttribute('field-invalid-class', normalized);
+		} else {
+			this.removeAttribute('field-invalid-class');
+		}
+	}
+
 	get fieldValidClass() {
-		if (!this._validClasses) {
-			this._validClasses =
-				this.getAttribute('field-valid-class') || 'validation-valid';
+		if (this._validClasses === null) {
+			const attr = this.getAttribute('field-valid-class');
+			this._validClasses = attr || 'validation-valid';
 		}
 		return this._validClasses;
 	}
 
+	set fieldValidClass(value) {
+		const normalized =
+			value === null || value === undefined
+				? ''
+				: String(value).trim();
+		if (normalized) {
+			this.setAttribute('field-valid-class', normalized);
+		} else {
+			this.removeAttribute('field-valid-class');
+		}
+	}
+
 	get ruleUnmatchedClass() {
-		if (!this._unmatchedClasses) {
-			this._unmatchedClasses =
-				this.getAttribute('rule-unmatched-class') ||
-				'validation-unmatched';
+		if (this._unmatchedClasses === null) {
+			const attr = this.getAttribute('rule-unmatched-class');
+			this._unmatchedClasses = attr || 'validation-unmatched';
 		}
 		return this._unmatchedClasses;
 	}
 
+	set ruleUnmatchedClass(value) {
+		const normalized =
+			value === null || value === undefined
+				? ''
+				: String(value).trim();
+		if (normalized) {
+			this.setAttribute('rule-unmatched-class', normalized);
+		} else {
+			this.removeAttribute('rule-unmatched-class');
+		}
+	}
+
 	get ruleMatchedClass() {
-		if (!this._matchedClasses) {
-			this._matchedClasses =
-				this.getAttribute('rule-matched-class') || 'validation-matched';
+		if (this._matchedClasses === null) {
+			const attr = this.getAttribute('rule-matched-class');
+			this._matchedClasses = attr || 'validation-matched';
 		}
 		return this._matchedClasses;
 	}
 
-	get fieldId() {
-		return this.getAttribute('for');
+	set ruleMatchedClass(value) {
+		const normalized =
+			value === null || value === undefined
+				? ''
+				: String(value).trim();
+		if (normalized) {
+			this.setAttribute('rule-matched-class', normalized);
+		} else {
+			this.removeAttribute('rule-matched-class');
+		}
+	}
+
+	get validationMessage() {
+		return this.getAttribute('validation-message');
+	}
+
+	set validationMessage(value) {
+		const normalized =
+			value === null || value === undefined
+				? ''
+				: String(value);
+		if (normalized) {
+			this.setAttribute('validation-message', normalized);
+		} else {
+			this.removeAttribute('validation-message');
+		}
+	}
+
+	__upgradeProperty(prop) {
+		if (Object.prototype.hasOwnProperty.call(this, prop)) {
+			const value = this[prop];
+			delete this[prop];
+			this[prop] = value;
+		}
 	}
 
 	_setupValidation() {
+		this._clearPendingTimeouts();
 		const fieldId = this.fieldId;
 		if (!fieldId) return;
 
@@ -165,6 +343,8 @@ export class FormValidationListElement extends HTMLElement {
 			);
 			return;
 		}
+
+		this._isValid = false;
 
 		// Find all rules (elements with data-pattern attribute)
 		this._rules = Array.from(this.querySelectorAll('[data-pattern]')).map(
@@ -192,13 +372,16 @@ export class FormValidationListElement extends HTMLElement {
 		});
 
 		// Create validation handler
-		this._validationHandler = (event) => {
-			this._validateField();
-		};
+		if (!this._validationHandler) {
+			this._validationHandler = () => {
+				this._validateField();
+			};
+		}
 
 		// Attach event listener
+		this._currentTriggerEvent = this.triggerEvent;
 		this._field.addEventListener(
-			this.triggerEvent,
+			this._currentTriggerEvent,
 			this._validationHandler,
 		);
 
@@ -233,12 +416,72 @@ export class FormValidationListElement extends HTMLElement {
 		}
 	}
 
+	__handleFieldClassChange(oldValue, defaultClass, cacheKey) {
+		const previousClass =
+			oldValue === null ? defaultClass : oldValue || null;
+		this[cacheKey] = null;
+		if (this._field && previousClass) {
+			this._field.classList.remove(previousClass);
+		}
+		if (this._field) {
+			this._validateField();
+		}
+	}
+
+	__handleRuleClassChange(oldValue, defaultClass, cacheKey) {
+		const previousClass =
+			oldValue === null ? defaultClass : oldValue || null;
+		this[cacheKey] = null;
+		if (previousClass) {
+			for (let i = 0; i < this._rules.length; i++) {
+				this._rules[i].element.classList.remove(previousClass);
+			}
+		}
+		if (this._field) {
+			this._validateField();
+		}
+	}
+
+	__rebindValidationHandler(oldValue) {
+		if (!this._field || !this._validationHandler) {
+			return;
+		}
+		const previousEvent =
+			this._currentTriggerEvent || oldValue || 'input';
+		const nextEvent = this.triggerEvent;
+		if (previousEvent === nextEvent) {
+			return;
+		}
+		this._field.removeEventListener(
+			previousEvent,
+			this._validationHandler,
+		);
+		this._currentTriggerEvent = nextEvent;
+		this._field.addEventListener(
+			nextEvent,
+			this._validationHandler,
+		);
+	}
+
+	_clearPendingTimeouts() {
+		if (!this._pendingTimeouts.size) {
+			return;
+		}
+		for (const timeoutId of this._pendingTimeouts) {
+			clearTimeout(timeoutId);
+		}
+		this._pendingTimeouts.clear();
+	}
+
 	_validateField() {
 		if (!this._field) return;
+
+		this._clearPendingTimeouts();
 
 		const value = this._field.value;
 		const rulesCount = this._rules.length;
 		let matchedRules = 0;
+		const delay = this.eachDelay;
 
 		// Validate each rule
 		for (let i = 0; i < rulesCount; i++) {
@@ -249,13 +492,19 @@ export class FormValidationListElement extends HTMLElement {
 				matchedRules++;
 			}
 
-			// Apply class changes with delay for visual cascade effect
-			if (this.eachDelay > 0) {
-				setTimeout(() => {
-					this._toggleMatchedClasses(element, matched);
-				}, i * this.eachDelay);
-			} else {
+			const applyClasses = () => {
 				this._toggleMatchedClasses(element, matched);
+			};
+
+			// Apply class changes with delay for visual cascade effect
+			if (delay > 0) {
+				const timeoutId = setTimeout(() => {
+					this._pendingTimeouts.delete(timeoutId);
+					applyClasses();
+				}, i * delay);
+				this._pendingTimeouts.add(timeoutId);
+			} else {
+				applyClasses();
 			}
 		}
 
@@ -313,7 +562,7 @@ export class FormValidationListElement extends HTMLElement {
 			this._field.setCustomValidity('');
 		} else {
 			const template =
-				this.getAttribute('validation-message') ||
+				this.validationMessage ||
 				'Please match all validation requirements ({matched} of {total})';
 			const message = template
 				.replace('{matched}', matchedRules)
@@ -323,10 +572,13 @@ export class FormValidationListElement extends HTMLElement {
 	}
 
 	_cleanup() {
+		this._clearPendingTimeouts();
 		// Remove event listener
 		if (this._field && this._validationHandler) {
+			const listenerType =
+				this._currentTriggerEvent || this.triggerEvent || 'input';
 			this._field.removeEventListener(
-				this.triggerEvent,
+				listenerType,
 				this._validationHandler,
 			);
 		}
@@ -363,6 +615,8 @@ export class FormValidationListElement extends HTMLElement {
 		this._invalidClasses = null;
 		this._matchedClasses = null;
 		this._unmatchedClasses = null;
+		this._currentTriggerEvent = null;
+		this._isValid = false;
 	}
 
 	/**
