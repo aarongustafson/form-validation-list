@@ -357,6 +357,7 @@ export class FormValidationListElement extends HTMLElement {
 		this._rules.forEach(({ element }) => {
 			element.setAttribute('role', 'listitem');
 			element.setAttribute('aria-live', 'polite');
+			element.setAttribute('aria-atomic', 'true');
 		});
 
 		// Create validation handler

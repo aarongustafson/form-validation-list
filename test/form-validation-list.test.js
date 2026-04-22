@@ -145,6 +145,14 @@ describe('FormValidationListElement', () => {
 			});
 		});
 
+		it('should set aria-live and aria-atomic on rule elements', () => {
+			const rules = element.querySelectorAll('[data-pattern]');
+			rules.forEach((rule) => {
+				expect(rule.getAttribute('aria-live')).toBe('polite');
+				expect(rule.getAttribute('aria-atomic')).toBe('true');
+			});
+		});
+
 		it('should validate input value against rules', async () => {
 			input.value = 'Test123';
 			input.dispatchEvent(new Event('input'));
