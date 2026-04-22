@@ -266,13 +266,13 @@ The message template uses `{matched}` and `{total}` as placeholders that will be
 The component is built with accessibility in mind:
 
 - **ARIA Roles**: The component has `role="list"` and each rule has `role="listitem"`
-- **ARIA Live Regions**: Each rule has `aria-live="polite"` to announce changes to screen readers
+- **ARIA Live Regions**: Each rule has `aria-live="polite"` and `aria-atomic="true"` so the full rule text is announced when status changes
 - **ARIA Described-by**: The validation list is automatically associated with the input field via `aria-describedby`, providing context to screen readers
 - **Existing Descriptions**: If the field already has an `aria-describedby` attribute, the component preserves existing values and appends its own ID
 
 ### Screen Reader Experience
 
-When a user focuses on the input field, screen readers will announce the field label followed by the validation requirements. As users type and rules are matched or unmatched, screen readers will announce the changes because of the `aria-live="polite"` attribute on each rule.
+When a user focuses on the input field, screen readers will announce the field label followed by the validation requirements. As users type and rules are matched or unmatched, screen readers will announce the full rule updates because each rule uses `aria-live="polite"` with `aria-atomic="true"`.
 
 ## Browser Validation Integration
 
