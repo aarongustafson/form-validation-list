@@ -11,21 +11,27 @@
  * @attr {string} field-valid-class - The class to apply when the field is valid (default: "validation-valid")
  * @attr {string} rule-unmatched-class - The class to apply when the rule's requirement are not met (default: "validation-unmatched")
  * @attr {string} rule-matched-class - The class to apply when the rule's requirement are met (default: "validation-matched")
+ * @attr {string} rule-matched-icon - Icon character for matched rules (default: "✓"); also configurable via --rule-matched-icon CSS custom property
+ * @attr {string} rule-unmatched-icon - Icon character for unmatched rules (default: "✗"); also configurable via --rule-unmatched-icon CSS custom property
+ * @attr {string} rule-matched-alt - Localized hidden state text for matched rules, used once the field has a value (default: "Criteria met")
+ * @attr {string} rule-unmatched-alt - Localized hidden state text for unmatched rules, used once the field has a value (default: "Criteria not met")
+ * @attr {string} announcement - Live region announcement template with {matched} and {total} placeholders (default: "Criteria met: {matched} of {total}")
  * @attr {string} validation-message - Custom validation message template with {matched} and {total} placeholders (default: "Please match all validation requirements ({matched} of {total})")
  *
  * @fires form-validation-list:validated - Fired when validation completes with details about matched/total rules
  *
  * @slot - Default slot for list items with data-pattern attributes
  *
- * @cssprop --validation-icon-matched - Content for the matched state icon (default: "✓")
- * @cssprop --validation-icon-unmatched - Content for the unmatched state icon (default: "✗")
- * @cssprop --validation-icon-size - Size of the validation icons (default: 1em)
- * @cssprop --validation-matched-color - Color for matched rules (default: green)
- * @cssprop --validation-unmatched-color - Color for unmatched rules (default: red)
+ * @cssprop --rule-matched-icon - Icon for matched state (default: "✓"). Alias: --validation-icon-matched
+ * @cssprop --rule-unmatched-icon - Icon for unmatched state (default: "✗"). Alias: --validation-icon-unmatched
+ * @cssprop --rule-icon-size - Size of the validation icons (default: 1em). Alias: --validation-icon-size
+ * @cssprop --rule-matched-color - Color for matched rules (default: green). Alias: --validation-matched-color
+ * @cssprop --rule-unmatched-color - Color for unmatched rules (default: red). Alias: --validation-unmatched-color
  */
 export class FormValidationListElement extends HTMLElement {
 	static #stylesInjected = false;
 	static #styleId = 'form-validation-list-styles';
+	static #describedByRestoreDelay = 200;
 
 	static get observedAttributes() {
 		return [
@@ -37,6 +43,11 @@ export class FormValidationListElement extends HTMLElement {
 			'field-valid-class',
 			'rule-unmatched-class',
 			'rule-matched-class',
+			'rule-matched-icon',
+			'rule-unmatched-icon',
+			'rule-matched-alt',
+			'rule-unmatched-alt',
+			'announcement',
 			'validation-message',
 		];
 	}
@@ -53,22 +64,49 @@ export class FormValidationListElement extends HTMLElement {
 				display: block;
 			}
 
-			form-validation-list [data-pattern]::before {
-				content: var(--validation-icon-unmatched, "✗");
+			.form-validation-list-rule-icon {
 				display: inline-block;
-				width: var(--validation-icon-size, 1em);
-				font-size: var(--validation-icon-size, 1em);
-				color: var(--validation-unmatched-color, red);
+				width: var(--rule-icon-size, var(--validation-icon-size, 1em));
+				font-size: var(--rule-icon-size, var(--validation-icon-size, 1em));
 			}
 
-			form-validation-list [data-pattern].validation-matched::before {
-				content: var(--validation-icon-matched, "✓");
-				color: var(--validation-matched-color, green);
+			.form-validation-list-rule-icon::before {
+				content: var(
+					--form-validation-list-rule-unmatched-icon,
+					var(--rule-unmatched-icon, var(--validation-icon-unmatched, "✗"))
+				);
+				display: inline-block;
+				color: var(--rule-unmatched-color, var(--validation-unmatched-color, red));
 			}
 
-			form-validation-list [data-pattern].validation-unmatched::before {
-				content: var(--validation-icon-unmatched, "✗");
-				color: var(--validation-unmatched-color, red);
+			form-validation-list [data-pattern].validation-matched > .form-validation-list-rule-icon::before {
+				content: var(
+					--form-validation-list-rule-matched-icon,
+					var(--rule-matched-icon, var(--validation-icon-matched, "✓"))
+				);
+				color: var(--rule-matched-color, var(--validation-matched-color, green));
+			}
+
+			.form-validation-list-rule-state {
+				clip: rect(0 0 0 0);
+				clip-path: inset(50%);
+				height: 1px;
+				margin: -1px;
+				overflow: hidden;
+				padding: 0;
+				position: absolute;
+				white-space: nowrap;
+				width: 1px;
+			}
+
+			.form-validation-list-live-region {
+				clip: rect(0 0 0 0);
+				clip-path: inset(50%);
+				height: 1px;
+				overflow: hidden;
+				position: absolute;
+				white-space: nowrap;
+				width: 1px;
 			}
 		`;
 
@@ -93,7 +131,12 @@ export class FormValidationListElement extends HTMLElement {
 		this._unmatchedClasses = null;
 		this._pendingTimeouts = new Set();
 		this._pendingInputThrottleTimeout = null;
+		this._pendingBlurRestoreTimeout = null;
 		this._currentTriggerEvent = null;
+		this._liveRegion = null;
+		this._blurHandler = null;
+		this._describedBySuspended = false;
+		this._hasValue = false;
 	}
 
 	connectedCallback() {
@@ -106,6 +149,11 @@ export class FormValidationListElement extends HTMLElement {
 		this.__upgradeProperty('fieldValidClass');
 		this.__upgradeProperty('ruleUnmatchedClass');
 		this.__upgradeProperty('ruleMatchedClass');
+		this.__upgradeProperty('ruleMatchedIcon');
+		this.__upgradeProperty('ruleUnmatchedIcon');
+		this.__upgradeProperty('ruleMatchedAlt');
+		this.__upgradeProperty('ruleUnmatchedAlt');
+		this.__upgradeProperty('announcement');
 		this.__upgradeProperty('validationMessage');
 		FormValidationListElement.#injectStyles();
 		this._setupValidation();
@@ -174,6 +222,15 @@ export class FormValidationListElement extends HTMLElement {
 					'validation-matched',
 					'_matchedClasses',
 				);
+				break;
+			case 'rule-matched-icon':
+			case 'rule-unmatched-icon':
+			case 'rule-matched-alt':
+			case 'rule-unmatched-alt':
+				this._updateRulePresentation();
+				break;
+			case 'announcement':
+				// No immediate action needed; next validation pass will use new template
 				break;
 			default:
 				break;
@@ -337,6 +394,79 @@ export class FormValidationListElement extends HTMLElement {
 		}
 	}
 
+	get ruleMatchedIcon() {
+		return this.getAttribute('rule-matched-icon');
+	}
+
+	set ruleMatchedIcon(value) {
+		const normalized =
+			value === null || value === undefined ? '' : String(value);
+		if (normalized) {
+			this.setAttribute('rule-matched-icon', normalized);
+		} else {
+			this.removeAttribute('rule-matched-icon');
+		}
+	}
+
+	get ruleUnmatchedIcon() {
+		return this.getAttribute('rule-unmatched-icon');
+	}
+
+	set ruleUnmatchedIcon(value) {
+		const normalized =
+			value === null || value === undefined ? '' : String(value);
+		if (normalized) {
+			this.setAttribute('rule-unmatched-icon', normalized);
+		} else {
+			this.removeAttribute('rule-unmatched-icon');
+		}
+	}
+
+	get ruleMatchedAlt() {
+		const attr = this.getAttribute('rule-matched-alt');
+		return attr !== null ? attr : 'Criteria met';
+	}
+
+	set ruleMatchedAlt(value) {
+		const normalized =
+			value === null || value === undefined ? '' : String(value);
+		if (normalized) {
+			this.setAttribute('rule-matched-alt', normalized);
+		} else {
+			this.removeAttribute('rule-matched-alt');
+		}
+	}
+
+	get ruleUnmatchedAlt() {
+		const attr = this.getAttribute('rule-unmatched-alt');
+		return attr !== null ? attr : 'Criteria not met';
+	}
+
+	set ruleUnmatchedAlt(value) {
+		const normalized =
+			value === null || value === undefined ? '' : String(value);
+		if (normalized) {
+			this.setAttribute('rule-unmatched-alt', normalized);
+		} else {
+			this.removeAttribute('rule-unmatched-alt');
+		}
+	}
+
+	get announcement() {
+		const attr = this.getAttribute('announcement');
+		return attr !== null ? attr : 'Criteria met: {matched} of {total}';
+	}
+
+	set announcement(value) {
+		const normalized =
+			value === null || value === undefined ? '' : String(value);
+		if (normalized) {
+			this.setAttribute('announcement', normalized);
+		} else {
+			this.removeAttribute('announcement');
+		}
+	}
+
 	__upgradeProperty(prop) {
 		if (Object.prototype.hasOwnProperty.call(this, prop)) {
 			const value = this[prop];
@@ -380,11 +510,38 @@ export class FormValidationListElement extends HTMLElement {
 		// Set up ARIA relationship
 		this._setupAccessibility();
 
-		// Keep native list semantics and only add live-region attributes
+		// Only add aria-atomic to list items; live announcements go through the live region
 		this._rules.forEach(({ element }) => {
-			element.setAttribute('aria-live', 'polite');
+			FormValidationListElement.#ensureRulePresentation(element);
 			element.setAttribute('aria-atomic', 'true');
 		});
+
+		// Create the visually-hidden live region
+		if (!this._liveRegion) {
+			this._liveRegion = document.createElement('span');
+			this._liveRegion.setAttribute('aria-live', 'polite');
+			this._liveRegion.setAttribute('aria-atomic', 'true');
+			this._liveRegion.className = 'form-validation-list-live-region';
+			this.appendChild(this._liveRegion);
+		}
+
+		// Sync icon glyphs and rule state text for this instance
+		this._updateRulePresentation();
+
+		// Attach blur handler to restore aria-describedby
+		if (!this._blurHandler) {
+			this._blurHandler = () => {
+				this._clearPendingBlurRestore();
+				this._pendingBlurRestoreTimeout = setTimeout(() => {
+					this._pendingBlurRestoreTimeout = null;
+					this._restoreDescribedBy();
+				}, FormValidationListElement.#describedByRestoreDelay);
+				if (this._liveRegion) {
+					this._liveRegion.textContent = '';
+				}
+			};
+			this._field.addEventListener('blur', this._blurHandler);
+		}
 
 		// Create validation handler
 		if (!this._validationHandler) {
@@ -428,6 +585,94 @@ export class FormValidationListElement extends HTMLElement {
 			}
 		} else {
 			this._field.setAttribute('aria-describedby', listId);
+		}
+	}
+
+	_suspendDescribedBy() {
+		if (this._describedBySuspended || !this._field || !this.id) return;
+		const current = this._field.getAttribute('aria-describedby');
+		if (!current) return;
+		const ids = current.split(' ').filter((id) => id !== this.id);
+		if (ids.length > 0) {
+			this._field.setAttribute('aria-describedby', ids.join(' '));
+		} else {
+			this._field.removeAttribute('aria-describedby');
+		}
+		this._describedBySuspended = true;
+	}
+
+	_restoreDescribedBy() {
+		this._clearPendingBlurRestore();
+		if (!this._describedBySuspended || !this._field || !this.id) return;
+		const current = this._field.getAttribute('aria-describedby');
+		if (current) {
+			const ids = current.split(' ');
+			if (!ids.includes(this.id)) {
+				this._field.setAttribute(
+					'aria-describedby',
+					`${current} ${this.id}`,
+				);
+			}
+		} else {
+			this._field.setAttribute('aria-describedby', this.id);
+		}
+		this._describedBySuspended = false;
+	}
+
+	static #ensureRulePresentation(element) {
+		let iconElement = element.querySelector(
+			':scope > .form-validation-list-rule-icon',
+		);
+		if (!iconElement) {
+			iconElement = document.createElement('span');
+			iconElement.className = 'form-validation-list-rule-icon';
+			iconElement.setAttribute('aria-hidden', 'true');
+			element.prepend(iconElement);
+		}
+
+		let stateElement = element.querySelector(
+			':scope > .form-validation-list-rule-state',
+		);
+		if (!stateElement) {
+			stateElement = document.createElement('span');
+			stateElement.className = 'form-validation-list-rule-state';
+			iconElement.insertAdjacentElement('afterend', stateElement);
+		}
+
+		return { iconElement, stateElement };
+	}
+
+	_updateRulePresentation() {
+		if (this.ruleMatchedIcon) {
+			this.style.setProperty(
+				'--form-validation-list-rule-matched-icon',
+				JSON.stringify(this.ruleMatchedIcon),
+			);
+		} else {
+			this.style.removeProperty(
+				'--form-validation-list-rule-matched-icon',
+			);
+		}
+
+		if (this.ruleUnmatchedIcon) {
+			this.style.setProperty(
+				'--form-validation-list-rule-unmatched-icon',
+				JSON.stringify(this.ruleUnmatchedIcon),
+			);
+		} else {
+			this.style.removeProperty(
+				'--form-validation-list-rule-unmatched-icon',
+			);
+		}
+
+		for (let i = 0; i < this._rules.length; i++) {
+			const { element } = this._rules[i];
+			const { stateElement } =
+				FormValidationListElement.#ensureRulePresentation(element);
+			const isMatched = element.classList.contains(this.ruleMatchedClass);
+			stateElement.textContent = this._hasValue
+				? `${isMatched ? this.ruleMatchedAlt : this.ruleUnmatchedAlt} `
+				: '';
 		}
 	}
 
@@ -490,6 +735,14 @@ export class FormValidationListElement extends HTMLElement {
 		this._pendingInputThrottleTimeout = null;
 	}
 
+	_clearPendingBlurRestore() {
+		if (this._pendingBlurRestoreTimeout === null) {
+			return;
+		}
+		clearTimeout(this._pendingBlurRestoreTimeout);
+		this._pendingBlurRestoreTimeout = null;
+	}
+
 	_scheduleValidation() {
 		if (!this._field) {
 			return;
@@ -500,6 +753,9 @@ export class FormValidationListElement extends HTMLElement {
 			this._validateField();
 			return;
 		}
+
+		// Suspend aria-describedby as soon as the user starts typing
+		this._suspendDescribedBy();
 
 		const throttleDelay = this.inputThrottle;
 		if (throttleDelay <= 0) {
@@ -523,6 +779,13 @@ export class FormValidationListElement extends HTMLElement {
 		const rulesCount = this._rules.length;
 		let matchedRules = 0;
 		const delay = this.eachDelay;
+
+		// Track whether the field has a value to expose localized rule state text
+		const hasValue = value.length > 0;
+		if (hasValue !== this._hasValue) {
+			this._hasValue = hasValue;
+			this.classList.toggle('has-value', hasValue);
+		}
 
 		// Validate each rule
 		for (let i = 0; i < rulesCount; i++) {
@@ -567,6 +830,14 @@ export class FormValidationListElement extends HTMLElement {
 			fieldClassList.remove(validClass);
 		}
 
+		// Update live region with summary announcement
+		if (this._liveRegion) {
+			const template = this.announcement;
+			this._liveRegion.textContent = template
+				.replace('{matched}', matchedRules)
+				.replace('{total}', rulesCount);
+		}
+
 		// Integrate with browser validation
 		this._updateFieldValidity(isValid, matchedRules);
 
@@ -586,6 +857,8 @@ export class FormValidationListElement extends HTMLElement {
 	}
 
 	_toggleMatchedClasses(element, matched) {
+		const { stateElement } =
+			FormValidationListElement.#ensureRulePresentation(element);
 		const classList = element.classList;
 		if (matched) {
 			classList.add(this.ruleMatchedClass);
@@ -594,6 +867,9 @@ export class FormValidationListElement extends HTMLElement {
 			classList.add(this.ruleUnmatchedClass);
 			classList.remove(this.ruleMatchedClass);
 		}
+		stateElement.textContent = this._hasValue
+			? `${matched ? this.ruleMatchedAlt : this.ruleUnmatchedAlt} `
+			: '';
 	}
 
 	_updateFieldValidity(isValid, matchedRules) {
@@ -613,9 +889,11 @@ export class FormValidationListElement extends HTMLElement {
 	}
 
 	_cleanup() {
+		this._clearPendingBlurRestore();
 		this._clearPendingInputThrottle();
 		this._clearPendingTimeouts();
-		// Remove event listener
+
+		// Remove event listeners
 		if (this._field && this._validationHandler) {
 			const listenerType =
 				this._currentTriggerEvent || this.triggerEvent || 'input';
@@ -624,6 +902,12 @@ export class FormValidationListElement extends HTMLElement {
 				this._validationHandler,
 			);
 		}
+		if (this._field && this._blurHandler) {
+			this._field.removeEventListener('blur', this._blurHandler);
+		}
+
+		// Restore describedby before disconnecting
+		this._restoreDescribedBy();
 
 		// Clear custom validity
 		if (this._field && this._field.setCustomValidity) {
@@ -650,14 +934,29 @@ export class FormValidationListElement extends HTMLElement {
 			);
 		}
 
+		// Remove live region
+		if (this._liveRegion && this._liveRegion.parentNode) {
+			this._liveRegion.remove();
+		}
+
+		// Remove has-value class
+		this.classList.remove('has-value');
+		this.style.removeProperty('--form-validation-list-rule-matched-icon');
+		this.style.removeProperty('--form-validation-list-rule-unmatched-icon');
+
 		this._field = null;
 		this._rules = [];
 		this._validationHandler = null;
+		this._blurHandler = null;
+		this._liveRegion = null;
+		this._pendingBlurRestoreTimeout = null;
 		this._validClasses = null;
 		this._invalidClasses = null;
 		this._matchedClasses = null;
 		this._unmatchedClasses = null;
 		this._currentTriggerEvent = null;
+		this._describedBySuspended = false;
+		this._hasValue = false;
 		this._isValid = false;
 	}
 

@@ -145,11 +145,11 @@ describe('FormValidationListElement', () => {
 			});
 		});
 
-		it('should set aria-live and aria-atomic on rule elements', () => {
+		it('should set aria-atomic on rule elements (not aria-live)', () => {
 			const rules = element.querySelectorAll('[data-pattern]');
 			rules.forEach((rule) => {
-				expect(rule.getAttribute('aria-live')).toBe('polite');
 				expect(rule.getAttribute('aria-atomic')).toBe('true');
+				expect(rule.hasAttribute('aria-live')).toBe(false);
 			});
 		});
 
@@ -234,6 +234,94 @@ describe('FormValidationListElement', () => {
 				input.dispatchEvent(new Event('input'));
 			});
 		});
+
+		it('should create a live region with aria-live and aria-atomic', () => {
+			const liveRegion = element.querySelector(
+				'.form-validation-list-live-region',
+			);
+			expect(liveRegion).toBeTruthy();
+			expect(liveRegion.getAttribute('aria-live')).toBe('polite');
+			expect(liveRegion.getAttribute('aria-atomic')).toBe('true');
+		});
+
+		it('should update the live region with the announcement after validation', async () => {
+			element.setAttribute('each-delay', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'Test123';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				const liveRegion = element.querySelector(
+					'.form-validation-list-live-region',
+				);
+				expect(liveRegion.textContent).toContain('3');
+			});
+		});
+
+		it('should suspend aria-describedby on input and restore on blur', () => {
+			vi.useFakeTimers();
+
+			try {
+				element.setAttribute('each-delay', '0');
+				element.setAttribute('input-throttle', '0');
+				element.disconnectedCallback();
+				element.connectedCallback();
+
+				const listId = element.id;
+				expect(input.getAttribute('aria-describedby')).toContain(
+					listId,
+				);
+
+				input.value = 'A';
+				input.dispatchEvent(new Event('input'));
+				const describedByDuringTyping =
+					input.getAttribute('aria-describedby');
+				expect(
+					describedByDuringTyping === null ||
+						!describedByDuringTyping.includes(listId),
+				).toBe(true);
+
+				input.dispatchEvent(new Event('blur'));
+				const describedByAfterBlur =
+					input.getAttribute('aria-describedby');
+				expect(
+					describedByAfterBlur === null ||
+						!describedByAfterBlur.includes(listId),
+				).toBe(true);
+
+				vi.advanceTimersByTime(200);
+				expect(input.getAttribute('aria-describedby')).toContain(
+					listId,
+				);
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('should toggle has-value class based on field content', async () => {
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			expect(element.classList.contains('has-value')).toBe(false);
+
+			input.value = 'A';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				expect(element.classList.contains('has-value')).toBe(true);
+			});
+
+			input.value = '';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				expect(element.classList.contains('has-value')).toBe(false);
+			});
+		});
 	});
 
 	describe('configuration attributes', () => {
@@ -269,6 +357,36 @@ describe('FormValidationListElement', () => {
 			expect(element.fieldValidClass).toBe('validation-valid');
 			expect(element.ruleUnmatchedClass).toBe('validation-unmatched');
 			expect(element.ruleMatchedClass).toBe('validation-matched');
+		});
+
+		it('should use default icon alt text', () => {
+			expect(element.ruleMatchedAlt).toBe('Criteria met');
+			expect(element.ruleUnmatchedAlt).toBe('Criteria not met');
+		});
+
+		it('should allow custom icon alt text', () => {
+			element.setAttribute('rule-matched-alt', 'Met');
+			element.setAttribute('rule-unmatched-alt', 'Not met');
+			expect(element.ruleMatchedAlt).toBe('Met');
+			expect(element.ruleUnmatchedAlt).toBe('Not met');
+		});
+
+		it('should use default announcement template', () => {
+			expect(element.announcement).toBe(
+				'Criteria met: {matched} of {total}',
+			);
+		});
+
+		it('should allow custom announcement template', () => {
+			element.setAttribute('announcement', '{matched}/{total} ok');
+			expect(element.announcement).toBe('{matched}/{total} ok');
+		});
+
+		it('should allow custom icons via attribute', () => {
+			element.setAttribute('rule-matched-icon', '✅');
+			element.setAttribute('rule-unmatched-icon', '❌');
+			expect(element.ruleMatchedIcon).toBe('✅');
+			expect(element.ruleUnmatchedIcon).toBe('❌');
 		});
 
 		it('should allow custom class names', () => {

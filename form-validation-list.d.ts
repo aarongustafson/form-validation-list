@@ -17,6 +17,16 @@ export declare class FormValidationListElement extends HTMLElement {
 	set ruleUnmatchedClass(value: string | null);
 	get ruleMatchedClass(): string;
 	set ruleMatchedClass(value: string | null);
+	get ruleMatchedIcon(): string | null;
+	set ruleMatchedIcon(value: string | null);
+	get ruleUnmatchedIcon(): string | null;
+	set ruleUnmatchedIcon(value: string | null);
+	get ruleMatchedAlt(): string;
+	set ruleMatchedAlt(value: string | null);
+	get ruleUnmatchedAlt(): string;
+	set ruleUnmatchedAlt(value: string | null);
+	get announcement(): string;
+	set announcement(value: string | null);
 	get validationMessage(): string | null;
 	set validationMessage(value: string | null);
 	validate(): boolean;

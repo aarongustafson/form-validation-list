@@ -133,6 +133,39 @@
 							"description": "Custom validation message template with {matched} and {total} placeholders for internationalization (default: \"Please match all validation requirements ({matched} of {total})\")",
 							"default": "\"Please match all validation requirements ({matched} of {total})\"",
 							"fieldName": "validationMessage"
+						},
+						{
+							"name": "rule-matched-icon",
+							"type": { "text": "string" },
+							"description": "Icon character for matched rules. Falls back to --rule-matched-icon CSS custom property then \"✓\"",
+							"fieldName": "ruleMatchedIcon"
+						},
+						{
+							"name": "rule-unmatched-icon",
+							"type": { "text": "string" },
+							"description": "Icon character for unmatched rules. Falls back to --rule-unmatched-icon CSS custom property then \"✗\"",
+							"fieldName": "ruleUnmatchedIcon"
+						},
+						{
+							"name": "rule-matched-alt",
+							"type": { "text": "string" },
+							"description": "Localized hidden state text inserted for matched rules once the field has a value (default: \"Criteria met\")",
+							"default": "\"Criteria met\"",
+							"fieldName": "ruleMatchedAlt"
+						},
+						{
+							"name": "rule-unmatched-alt",
+							"type": { "text": "string" },
+							"description": "Localized hidden state text inserted for unmatched rules once the field has a value (default: \"Criteria not met\")",
+							"default": "\"Criteria not met\"",
+							"fieldName": "ruleUnmatchedAlt"
+						},
+						{
+							"name": "announcement",
+							"type": { "text": "string" },
+							"description": "Live region announcement template. Use {matched} and {total} as placeholders (default: \"Criteria met: {matched} of {total}\")",
+							"default": "\"Criteria met: {matched} of {total}\"",
+							"fieldName": "announcement"
 						}
 					],
 					"superclass": {
@@ -142,28 +175,28 @@
 					"customElement": true,
 					"cssProperties": [
 						{
-							"name": "--validation-icon-matched",
-							"description": "Content for the matched state icon",
-							"default": "\"\u2713\""
+							"name": "--rule-matched-icon",
+							"description": "Icon for matched state (default: \"✓\"). Legacy alias: --validation-icon-matched",
+							"default": "\"✓\""
 						},
 						{
-							"name": "--validation-icon-unmatched",
-							"description": "Content for the unmatched state icon",
-							"default": "\"\u2717\""
+							"name": "--rule-unmatched-icon",
+							"description": "Icon for unmatched state (default: \"✗\"). Legacy alias: --validation-icon-unmatched",
+							"default": "\"✗\""
 						},
 						{
-							"name": "--validation-icon-size",
-							"description": "Size of the validation icons",
+							"name": "--rule-icon-size",
+							"description": "Size of the validation icons (default: 1em). Legacy alias: --validation-icon-size",
 							"default": "1em"
 						},
 						{
-							"name": "--validation-matched-color",
-							"description": "Color for matched rules",
+							"name": "--rule-matched-color",
+							"description": "Color for matched rules (default: green). Legacy alias: --validation-matched-color",
 							"default": "green"
 						},
 						{
-							"name": "--validation-unmatched-color",
-							"description": "Color for unmatched rules",
+							"name": "--rule-unmatched-color",
+							"description": "Color for unmatched rules (default: red). Legacy alias: --validation-unmatched-color",
 							"default": "red"
 						}
 					]
