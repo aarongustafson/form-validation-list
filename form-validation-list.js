@@ -103,7 +103,6 @@ export class FormValidationListElement extends HTMLElement {
 		this.__upgradeProperty('ruleUnmatchedClass');
 		this.__upgradeProperty('ruleMatchedClass');
 		this.__upgradeProperty('validationMessage');
-		this.setAttribute('role', 'list');
 		FormValidationListElement.#injectStyles();
 		this._setupValidation();
 	}
@@ -353,9 +352,8 @@ export class FormValidationListElement extends HTMLElement {
 		// Set up ARIA relationship
 		this._setupAccessibility();
 
-		// Add role to rule items
+		// Keep native list semantics and only add live-region attributes
 		this._rules.forEach(({ element }) => {
-			element.setAttribute('role', 'listitem');
 			element.setAttribute('aria-live', 'polite');
 			element.setAttribute('aria-atomic', 'true');
 		});

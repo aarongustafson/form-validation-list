@@ -38,8 +38,8 @@ describe('FormValidationListElement', () => {
 		expect(element.shadowRoot).toBeFalsy();
 	});
 
-	it('should have role="list"', () => {
-		expect(element.getAttribute('role')).toBe('list');
+	it('should not force role="list" on host', () => {
+		expect(element.hasAttribute('role')).toBe(false);
 	});
 
 	it('should find the associated input field', () => {
@@ -138,10 +138,10 @@ describe('FormValidationListElement', () => {
 			expect(element._rules.length).toBe(3);
 		});
 
-		it('should set role="listitem" on rule elements', () => {
+		it('should not force role="listitem" on rule elements', () => {
 			const rules = element.querySelectorAll('[data-pattern]');
 			rules.forEach((rule) => {
-				expect(rule.getAttribute('role')).toBe('listitem');
+				expect(rule.hasAttribute('role')).toBe(false);
 			});
 		});
 
