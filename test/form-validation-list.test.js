@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { waitFor } from '@testing-library/dom';
 import { FormValidationListElement } from '../form-validation-list.js';
 
@@ -250,6 +250,15 @@ describe('FormValidationListElement', () => {
 			expect(element.eachDelay).toBe(150);
 		});
 
+		it('should use default input-throttle', () => {
+			expect(element.inputThrottle).toBe(250);
+		});
+
+		it('should allow custom input-throttle', () => {
+			element.setAttribute('input-throttle', '40');
+			expect(element.inputThrottle).toBe(40);
+		});
+
 		it('should allow custom each-delay', () => {
 			element.setAttribute('each-delay', '200');
 			expect(element.eachDelay).toBe(200);
@@ -338,6 +347,50 @@ describe('FormValidationListElement', () => {
 					false,
 				);
 			});
+		});
+
+		it('should throttle input-triggered validation and use latest value', () => {
+			vi.useFakeTimers();
+
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '100');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			const rule = element.querySelector('[data-pattern]');
+
+			input.value = 'abc';
+			input.dispatchEvent(new Event('input'));
+
+			input.value = 'ABC';
+			input.dispatchEvent(new Event('input'));
+
+			expect(rule.classList.contains('validation-matched')).toBe(false);
+			expect(rule.classList.contains('validation-unmatched')).toBe(false);
+
+			vi.advanceTimersByTime(100);
+
+			expect(rule.classList.contains('validation-matched')).toBe(true);
+			expect(rule.classList.contains('validation-unmatched')).toBe(false);
+
+			vi.useRealTimers();
+		});
+
+		it('should not throttle non-input trigger events', () => {
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+			element.setAttribute('trigger-event', 'change');
+			element.setAttribute('input-throttle', '1000');
+			element.setAttribute('each-delay', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			const rule = element.querySelector('[data-pattern]');
+			input.value = 'ABC';
+			input.dispatchEvent(new Event('change'));
+
+			expect(rule.classList.contains('validation-matched')).toBe(true);
+			expect(rule.classList.contains('validation-unmatched')).toBe(false);
 		});
 	});
 

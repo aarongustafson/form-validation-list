@@ -72,6 +72,15 @@
 							"fieldName": "triggerEvent"
 						},
 						{
+							"name": "input-throttle",
+							"type": {
+								"text": "number"
+							},
+							"description": "Delay in milliseconds before running validation on input events (default: 250)",
+							"default": "250",
+							"fieldName": "inputThrottle"
+						},
+						{
 							"name": "each-delay",
 							"type": {
 								"text": "number"

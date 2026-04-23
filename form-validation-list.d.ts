@@ -5,6 +5,8 @@ export declare class FormValidationListElement extends HTMLElement {
 	set fieldId(value: string | null);
 	get triggerEvent(): string;
 	set triggerEvent(value: string | null);
+	get inputThrottle(): number;
+	set inputThrottle(value: number | string | null);
 	get eachDelay(): number;
 	set eachDelay(value: number | string | null);
 	get fieldInvalidClass(): string;

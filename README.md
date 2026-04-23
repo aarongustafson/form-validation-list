@@ -17,7 +17,7 @@ A web component that provides visual validation feedback for form fields using a
 ## TypeScript & Framework Support
 
 - Ships with bundled `.d.ts` definitions so editors and TypeScript builds understand `FormValidationListElement` and `defineFormValidationList`.
-- `for`, `trigger-event`, `each-delay`, and every class-related attribute now reflect between properties and attributes, keeping reactive frameworks and declarative templates in sync with DOM state.
+- `for`, `trigger-event`, `input-throttle`, `each-delay`, and every class-related attribute now reflect between properties and attributes, keeping reactive frameworks and declarative templates in sync with DOM state.
 - An internal `_upgradeProperty` helper captures properties that were assigned before the element upgraded, ensuring early property sets (common in SSR or JSX) are not lost.
 - The `HTMLElementTagNameMap` is augmented so `document.querySelector('form-validation-list')` is strongly typed in TS/JSX projects.
 
@@ -104,6 +104,7 @@ You can also include the guarded script from HTML:
 |-----------|------|---------|-------------|
 | `for` | `string` | `""` | **Required.** The ID of the input field to validate |
 | `trigger-event` | `string` | `"input"` | The event to trigger validation on (e.g., "input", "keyup", "change") |
+| `input-throttle` | `number` | `250` | Delay in milliseconds before running validation for `input` events. Set to `0` to disable throttling. |
 | `each-delay` | `number` | `150` | Delay in milliseconds between each rule being classified (creates cascade effect) |
 | `field-invalid-class` | `string` | `"validation-invalid"` | Class to apply to the field when invalid |
 | `field-valid-class` | `string` | `"validation-valid"` | Class to apply to the field when valid |
@@ -117,6 +118,7 @@ You can also include the guarded script from HTML:
 <form-validation-list
   for="password"
   trigger-event="keyup"
+  input-throttle="0"
   each-delay="100"
   field-valid-class="is-valid"
   field-invalid-class="is-invalid">

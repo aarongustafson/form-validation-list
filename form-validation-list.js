@@ -5,6 +5,7 @@
  *
  * @attr {string} for - The ID of the input field to validate
  * @attr {string} trigger-event - The event to trigger validation on (default: "input")
+ * @attr {number} input-throttle - Delay in milliseconds before running validation on input events (default: 250)
  * @attr {number} each-delay - Delay in milliseconds between each rule being classified (default: 150)
  * @attr {string} field-invalid-class - The class to apply when the field is invalid (default: "validation-invalid")
  * @attr {string} field-valid-class - The class to apply when the field is valid (default: "validation-valid")
@@ -30,6 +31,7 @@ export class FormValidationListElement extends HTMLElement {
 		return [
 			'for',
 			'trigger-event',
+			'input-throttle',
 			'each-delay',
 			'field-invalid-class',
 			'field-valid-class',
@@ -90,6 +92,7 @@ export class FormValidationListElement extends HTMLElement {
 		this._matchedClasses = null;
 		this._unmatchedClasses = null;
 		this._pendingTimeouts = new Set();
+		this._pendingInputThrottleTimeout = null;
 		this._currentTriggerEvent = null;
 	}
 
@@ -97,6 +100,7 @@ export class FormValidationListElement extends HTMLElement {
 		this.__upgradeProperty('for');
 		this.__upgradeProperty('fieldId');
 		this.__upgradeProperty('triggerEvent');
+		this.__upgradeProperty('inputThrottle');
 		this.__upgradeProperty('eachDelay');
 		this.__upgradeProperty('fieldInvalidClass');
 		this.__upgradeProperty('fieldValidClass');
@@ -130,6 +134,12 @@ export class FormValidationListElement extends HTMLElement {
 				break;
 			case 'trigger-event':
 				this.__rebindValidationHandler(oldValue);
+				break;
+			case 'input-throttle':
+				this._clearPendingInputThrottle();
+				if (this._field) {
+					this._validateField();
+				}
 				break;
 			case 'each-delay':
 				this._clearPendingTimeouts();
@@ -202,6 +212,24 @@ export class FormValidationListElement extends HTMLElement {
 			this.setAttribute('trigger-event', normalized);
 		} else {
 			this.removeAttribute('trigger-event');
+		}
+	}
+
+	get inputThrottle() {
+		const attrValue = this.getAttribute('input-throttle');
+		if (attrValue === null || attrValue === undefined || attrValue === '') {
+			return 250;
+		}
+		const parsed = Number(attrValue);
+		return Number.isFinite(parsed) && parsed >= 0 ? parsed : 250;
+	}
+
+	set inputThrottle(value) {
+		const parsed = Number(value);
+		if (Number.isFinite(parsed) && parsed >= 0) {
+			this.setAttribute('input-throttle', String(parsed));
+		} else {
+			this.removeAttribute('input-throttle');
 		}
 	}
 
@@ -361,7 +389,7 @@ export class FormValidationListElement extends HTMLElement {
 		// Create validation handler
 		if (!this._validationHandler) {
 			this._validationHandler = () => {
-				this._validateField();
+				this._scheduleValidation();
 			};
 		}
 
@@ -433,6 +461,7 @@ export class FormValidationListElement extends HTMLElement {
 		if (!this._field || !this._validationHandler) {
 			return;
 		}
+		this._clearPendingInputThrottle();
 		const previousEvent = this._currentTriggerEvent || oldValue || 'input';
 		const nextEvent = this.triggerEvent;
 		if (previousEvent === nextEvent) {
@@ -451,6 +480,38 @@ export class FormValidationListElement extends HTMLElement {
 			clearTimeout(timeoutId);
 		}
 		this._pendingTimeouts.clear();
+	}
+
+	_clearPendingInputThrottle() {
+		if (this._pendingInputThrottleTimeout === null) {
+			return;
+		}
+		clearTimeout(this._pendingInputThrottleTimeout);
+		this._pendingInputThrottleTimeout = null;
+	}
+
+	_scheduleValidation() {
+		if (!this._field) {
+			return;
+		}
+
+		const listenerType = this._currentTriggerEvent || this.triggerEvent;
+		if (listenerType !== 'input') {
+			this._validateField();
+			return;
+		}
+
+		const throttleDelay = this.inputThrottle;
+		if (throttleDelay <= 0) {
+			this._validateField();
+			return;
+		}
+
+		this._clearPendingInputThrottle();
+		this._pendingInputThrottleTimeout = setTimeout(() => {
+			this._pendingInputThrottleTimeout = null;
+			this._validateField();
+		}, throttleDelay);
 	}
 
 	_validateField() {
@@ -552,6 +613,7 @@ export class FormValidationListElement extends HTMLElement {
 	}
 
 	_cleanup() {
+		this._clearPendingInputThrottle();
 		this._clearPendingTimeouts();
 		// Remove event listener
 		if (this._field && this._validationHandler) {
