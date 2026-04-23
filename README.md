@@ -8,8 +8,8 @@ A web component that provides visual validation feedback for form fields using a
 
 - **Light DOM** - Uses light DOM for better accessibility and SEO
 - **Pattern-based validation** - Define rules using regular expressions
-- **Accessible** - Proper ARIA attributes and screen reader support
-- **Customizable** - Configure classes and icons via CSS custom properties
+- **Accessible** - Single live summary while typing, with full criteria state restored on blur
+- **Customizable** - Configure classes, icons, and localized rule state strings
 - **Browser validation integration** - Participates in native form validation using `setCustomValidity`
 - **Event-driven** - Fires custom events for programmatic interaction
 - **Visual feedback** - Animated cascade effect when validating rules
@@ -17,7 +17,7 @@ A web component that provides visual validation feedback for form fields using a
 ## TypeScript & Framework Support
 
 - Ships with bundled `.d.ts` definitions so editors and TypeScript builds understand `FormValidationListElement` and `defineFormValidationList`.
-- `for`, `trigger-event`, `input-throttle`, `each-delay`, and every class-related attribute now reflect between properties and attributes, keeping reactive frameworks and declarative templates in sync with DOM state.
+- `for`, `trigger-event`, `input-throttle`, `each-delay`, the icon/state text attributes, and every class-related attribute reflect between properties and attributes, keeping reactive frameworks and declarative templates in sync with DOM state.
 - An internal `_upgradeProperty` helper captures properties that were assigned before the element upgraded, ensuring early property sets (common in SSR or JSX) are not lost.
 - The `HTMLElementTagNameMap` is augmented so `document.querySelector('form-validation-list')` is strongly typed in TS/JSX projects.
 
@@ -93,10 +93,12 @@ You can also include the guarded script from HTML:
 1. Add a `for` attribute to the `<form-validation-list>` element with the ID of the input field you want to validate
 2. Inside the element, add list items (or any elements) with a `data-pattern` attribute containing a regular expression
 3. As the user types, the component will test the input value against each pattern
-4. Matched rules get the `validation-matched` class and show a checkmark
-5. Unmatched rules get the `validation-unmatched` class and show an X
-6. When all rules are matched, the field gets the `validation-valid` class
-7. The component uses `setCustomValidity()` to participate in the browser's form validation
+4. While typing, the field temporarily stops referencing the full criteria list via `aria-describedby` to avoid duplicate announcements
+5. A single polite live region announces the localized summary using the `announcement` template
+6. Matched rules get the `validation-matched` class and show a checkmark; unmatched rules get `validation-unmatched` and show an X
+7. Once the field has a value, each rule also includes visually hidden localized state text such as "Criteria met" or "Criteria not met"
+8. On blur, the field's `aria-describedby` is restored so returning to the field reads the full criteria state again
+9. The component uses `setCustomValidity()` to participate in the browser's form validation
 
 ## Attributes
 
@@ -110,6 +112,11 @@ You can also include the guarded script from HTML:
 | `field-valid-class` | `string` | `"validation-valid"` | Class to apply to the field when valid |
 | `rule-unmatched-class` | `string` | `"validation-unmatched"` | Class to apply to unmatched rules |
 | `rule-matched-class` | `string` | `"validation-matched"` | Class to apply to matched rules |
+| `rule-matched-icon` | `string` | `"✓"` | Override the matched icon glyph for this instance |
+| `rule-unmatched-icon` | `string` | `"✗"` | Override the unmatched icon glyph for this instance |
+| `rule-matched-alt` | `string` | `"Criteria met"` | Localized hidden state text inserted for matched rules once the field has a value |
+| `rule-unmatched-alt` | `string` | `"Criteria not met"` | Localized hidden state text inserted for unmatched rules once the field has a value |
+| `announcement` | `string` | `"Criteria met: {matched} of {total}"` | Live region summary while typing. Use `{matched}` and `{total}` placeholders. |
 | `validation-message` | `string` | `"Please match all validation requirements ({matched} of {total})"` | Custom validation message template. Use `{matched}` and `{total}` as placeholders for internationalization |
 
 ### Example with Custom Attributes
@@ -119,6 +126,9 @@ You can also include the guarded script from HTML:
   for="password"
   trigger-event="keyup"
   input-throttle="0"
+  rule-matched-alt="Requirement met"
+  rule-unmatched-alt="Requirement not met"
+  announcement="{matched} of {total} requirements met"
   each-delay="100"
   field-valid-class="is-valid"
   field-invalid-class="is-invalid">
@@ -205,21 +215,21 @@ console.log('Current state:', validationList.isValid);
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `--validation-icon-matched` | `"✓"` | Content for the matched state icon |
-| `--validation-icon-unmatched` | `"✗"` | Content for the unmatched state icon |
-| `--validation-icon-size` | `1em` | Size of the validation icons |
-| `--validation-matched-color` | `green` | Color for matched rules |
-| `--validation-unmatched-color` | `red` | Color for unmatched rules |
+| `--rule-matched-icon` | `"✓"` | Content for the matched state icon. Legacy alias: `--validation-icon-matched` |
+| `--rule-unmatched-icon` | `"✗"` | Content for the unmatched state icon. Legacy alias: `--validation-icon-unmatched` |
+| `--rule-icon-size` | `1em` | Size of the validation icons. Legacy alias: `--validation-icon-size` |
+| `--rule-matched-color` | `green` | Color for matched rules. Legacy alias: `--validation-matched-color` |
+| `--rule-unmatched-color` | `red` | Color for unmatched rules. Legacy alias: `--validation-unmatched-color` |
 
 ### Example Custom Styling
 
 ```css
 form-validation-list {
-  --validation-icon-matched: "✅";
-  --validation-icon-unmatched: "❌";
-  --validation-icon-size: 1.2em;
-  --validation-matched-color: #28a745;
-  --validation-unmatched-color: #dc3545;
+  --rule-matched-icon: "✅";
+  --rule-unmatched-icon: "❌";
+  --rule-icon-size: 1.2em;
+  --rule-matched-color: #28a745;
+  --rule-unmatched-color: #dc3545;
 }
 
 form-validation-list ul {
@@ -235,12 +245,19 @@ form-validation-list li {
 
 ## Internationalization
 
-The `validation-message` attribute supports customizable error messages with placeholders for easy internationalization:
+The component exposes separate templates for browser validation messages, live typing announcements, and per-rule hidden state text:
+
+- `validation-message` supports `{matched}` and `{total}` placeholders for native form validation.
+- `announcement` supports `{matched}` and `{total}` placeholders for the live region summary while typing.
+- `rule-matched-alt` and `rule-unmatched-alt` provide localized rule state text when the field is revisited.
 
 ```html
 <!-- Spanish -->
 <form-validation-list
   for="contrasena"
+  announcement="{matched} de {total} criterios cumplidos"
+  rule-matched-alt="Criterio cumplido"
+  rule-unmatched-alt="Criterio pendiente"
   validation-message="Por favor, cumple todos los requisitos ({matched} de {total})">
   <ul>
     <li data-pattern="[A-Z]+">Al menos una letra mayúscula</li>
@@ -252,6 +269,9 @@ The `validation-message` attribute supports customizable error messages with pla
 <!-- French -->
 <form-validation-list
   for="mot-de-passe"
+  announcement="{matched} critères satisfaits sur {total}"
+  rule-matched-alt="Critère satisfait"
+  rule-unmatched-alt="Critère non satisfait"
   validation-message="Veuillez satisfaire à toutes les exigences ({matched} sur {total})">
   <ul>
     <li data-pattern="[A-Z]+">Au moins une lettre majuscule</li>
@@ -267,14 +287,15 @@ The message template uses `{matched}` and `{total}` as placeholders that will be
 
 The component is built with accessibility in mind:
 
-- **ARIA Roles**: The component has `role="list"` and each rule has `role="listitem"`
-- **ARIA Live Regions**: Each rule has `aria-live="polite"` and `aria-atomic="true"` so the full rule text is announced when status changes
-- **ARIA Described-by**: The validation list is automatically associated with the input field via `aria-describedby`, providing context to screen readers
+- **Native List Semantics**: The component preserves the semantics of your existing `ul`/`li` markup
+- **Single Live Region**: A dedicated polite, atomic live region announces the localized summary while the user types
+- **ARIA Described-by**: The validation list is automatically associated with the input field via `aria-describedby`, then temporarily suspended while typing and restored on blur
+- **Localized Rule State**: Each rule gets visually hidden state text in the DOM once the field has a value, which works better with translation tooling than CSS-only alternative text
 - **Existing Descriptions**: If the field already has an `aria-describedby` attribute, the component preserves existing values and appends its own ID
 
 ### Screen Reader Experience
 
-When a user focuses on the input field, screen readers will announce the field label followed by the validation requirements. As users type and rules are matched or unmatched, screen readers will announce the full rule updates because each rule uses `aria-live="polite"` with `aria-atomic="true"`.
+When a user focuses on the input field, screen readers announce the field label followed by the validation requirements. While the user types, the component temporarily suspends the list from `aria-describedby` and instead announces the live summary from the `announcement` template. On blur, the full criteria description is restored so returning to the field reads the latest rule state again.
 
 ## Browser Validation Integration
 
