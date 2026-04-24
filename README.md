@@ -105,7 +105,7 @@ You can also include the guarded script from HTML:
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `for` | `string` | `""` | **Required.** The ID of the input field to validate |
-| `trigger-event` | `string` | `"input"` | The event to trigger validation on (e.g., "input", "keyup", "change") |
+| `trigger-event` | `string` | `"input"` | The event to trigger validation on (`"input"` or `"blur"`) |
 | `input-throttle` | `number` | `250` | Delay in milliseconds before running validation for `input` events. Set to `0` to disable throttling. |
 | `each-delay` | `number` | `150` | Delay in milliseconds between each rule being classified (creates cascade effect) |
 | `field-invalid-class` | `string` | `"validation-invalid"` | Class to apply to the field when invalid |
@@ -124,7 +124,7 @@ You can also include the guarded script from HTML:
 ```html
 <form-validation-list
   for="password"
-  trigger-event="keyup"
+  trigger-event="input"
   input-throttle="0"
   rule-matched-alt="Requirement met"
   rule-unmatched-alt="Requirement not met"
@@ -336,7 +336,7 @@ If you're migrating from the jQuery version:
 |----------------|----------------------|
 | `data-validation-rules="id"` | `for="id"` |
 | `data-validation-rules-rule="pattern"` | `data-pattern="pattern"` |
-| `trigger_event: "keyup"` | `trigger-event="keyup"` |
+| `trigger_event: "keyup"` | `trigger-event="input"` |
 | `each_delay: 150` | `each-delay="150"` |
 | `field_invalid_class: "class"` | `field-invalid-class="class"` |
 | `field_valid_class: "class"` | `field-valid-class="class"` |

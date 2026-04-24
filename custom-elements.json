@@ -67,7 +67,7 @@
 							"type": {
 								"text": "string"
 							},
-							"description": "The event to trigger validation on (default: \"input\")",
+							"description": "The event to trigger validation on (\"input\" or \"blur\", default: \"input\")",
 							"default": "\"input\"",
 							"fieldName": "triggerEvent"
 						},
