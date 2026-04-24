@@ -470,29 +470,31 @@ describe('FormValidationListElement', () => {
 		it('should throttle input-triggered validation and use latest value', () => {
 			vi.useFakeTimers();
 
-			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
-			element.setAttribute('each-delay', '0');
-			element.setAttribute('input-throttle', '100');
-			element.disconnectedCallback();
-			element.connectedCallback();
+			try {
+				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+				element.setAttribute('each-delay', '0');
+				element.setAttribute('input-throttle', '100');
+				element.disconnectedCallback();
+				element.connectedCallback();
 
-			const rule = element.querySelector('[data-pattern]');
+				const rule = element.querySelector('[data-pattern]');
 
-			input.value = 'abc';
-			input.dispatchEvent(new Event('input'));
+				input.value = 'abc';
+				input.dispatchEvent(new Event('input'));
 
-			input.value = 'ABC';
-			input.dispatchEvent(new Event('input'));
+				input.value = 'ABC';
+				input.dispatchEvent(new Event('input'));
 
-			expect(rule.classList.contains('validation-matched')).toBe(false);
-			expect(rule.classList.contains('validation-unmatched')).toBe(false);
+				expect(rule.classList.contains('validation-matched')).toBe(false);
+				expect(rule.classList.contains('validation-unmatched')).toBe(false);
 
-			vi.advanceTimersByTime(100);
+				vi.advanceTimersByTime(100);
 
-			expect(rule.classList.contains('validation-matched')).toBe(true);
-			expect(rule.classList.contains('validation-unmatched')).toBe(false);
-
-			vi.useRealTimers();
+				expect(rule.classList.contains('validation-matched')).toBe(true);
+				expect(rule.classList.contains('validation-unmatched')).toBe(false);
+			} finally {
+				vi.useRealTimers();
+			}
 		});
 
 		it('should not throttle non-input trigger events', () => {
