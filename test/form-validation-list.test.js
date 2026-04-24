@@ -217,6 +217,24 @@ describe('FormValidationListElement', () => {
 			});
 		});
 
+		it('should replace all placeholders in validation-message template', async () => {
+			element.setAttribute(
+				'validation-message',
+				'Matched {matched}/{matched} of {total}/{total}',
+			);
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'test';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				expect(input.validationMessage).toBe('Matched 1/1 of 3/3');
+			});
+		});
+
 		it('should fire validation event', () => {
 			return new Promise((resolve) => {
 				element.addEventListener(
@@ -246,6 +264,7 @@ describe('FormValidationListElement', () => {
 
 		it('should update the live region with the announcement after validation', async () => {
 			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
 			element.disconnectedCallback();
 			element.connectedCallback();
 
@@ -257,6 +276,27 @@ describe('FormValidationListElement', () => {
 					'.form-validation-list-live-region',
 				);
 				expect(liveRegion.textContent).toContain('3');
+			});
+		});
+
+		it('should replace all matched and total placeholders in announcement', async () => {
+			element.setAttribute(
+				'announcement',
+				'Matched {matched}/{matched} of {total}/{total}',
+			);
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'Test123';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				const liveRegion = element.querySelector(
+					'.form-validation-list-live-region',
+				);
+				expect(liveRegion.textContent).toBe('Matched 3/3 of 3/3');
 			});
 		});
 
@@ -552,6 +592,23 @@ describe('FormValidationListElement', () => {
 	});
 
 	describe('cleanup', () => {
+		it('should remove only this id from aria-describedby when disconnected', () => {
+			input.setAttribute('aria-describedby', 'existing-id');
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			const listId = element.id;
+			expect(input.getAttribute('aria-describedby')).toContain(
+				'existing-id',
+			);
+			expect(input.getAttribute('aria-describedby')).toContain(listId);
+
+			element.disconnectedCallback();
+
+			expect(input.getAttribute('aria-describedby')).toBe('existing-id');
+		});
+
 		it('should cleanup when disconnected', async () => {
 			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
 			element.setAttribute('each-delay', '0');
@@ -572,14 +629,25 @@ describe('FormValidationListElement', () => {
 		});
 
 		it('should cleanup when for attribute changes', () => {
+			const nextInput = document.createElement('input');
+			nextInput.type = 'text';
+			nextInput.id = 'next-input';
+			document.body.appendChild(nextInput);
+
 			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
 			element.disconnectedCallback();
 			element.connectedCallback();
 
 			const oldField = element._field;
-			element.setAttribute('for', 'non-existent');
+			oldField.setAttribute('aria-describedby', 'existing-id');
+			element._setupAccessibility();
+
+			element.setAttribute('for', 'next-input');
 
 			expect(element._field).not.toBe(oldField);
+			expect(oldField.getAttribute('aria-describedby')).toBe(
+				'existing-id',
+			);
 		});
 	});
 });

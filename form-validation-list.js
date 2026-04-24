@@ -592,16 +592,7 @@ export class FormValidationListElement extends HTMLElement {
 
 	_suspendDescribedBy() {
 		if (this._describedBySuspended || !this._field || !this.id) return;
-		const current = this._field.getAttribute('aria-describedby');
-		if (!current) return;
-		const ids = FormValidationListElement.#parseIdRefs(current).filter(
-			(id) => id !== this.id,
-		);
-		if (ids.length > 0) {
-			this._field.setAttribute('aria-describedby', ids.join(' '));
-		} else {
-			this._field.removeAttribute('aria-describedby');
-		}
+		this._removeOwnDescribedBy();
 		this._describedBySuspended = true;
 	}
 
@@ -621,9 +612,29 @@ export class FormValidationListElement extends HTMLElement {
 		this._describedBySuspended = false;
 	}
 
+	_removeOwnDescribedBy(field = this._field) {
+		if (!field || !this.id) return;
+		const current = field.getAttribute('aria-describedby');
+		if (!current) return;
+		const ids = FormValidationListElement.#parseIdRefs(current).filter(
+			(id) => id !== this.id,
+		);
+		if (ids.length > 0) {
+			field.setAttribute('aria-describedby', ids.join(' '));
+		} else {
+			field.removeAttribute('aria-describedby');
+		}
+	}
+
 	static #parseIdRefs(value) {
 		if (!value) return [];
 		return value.trim().split(/\s+/).filter(Boolean);
+	}
+
+	static #expandCountTemplate(template, matched, total) {
+		return String(template)
+			.replace(/\{matched\}/g, String(matched))
+			.replace(/\{total\}/g, String(total));
 	}
 
 	static #ensureRulePresentation(element) {
@@ -839,10 +850,12 @@ export class FormValidationListElement extends HTMLElement {
 
 		// Update live region with summary announcement
 		if (this._liveRegion) {
-			const template = this.announcement;
-			this._liveRegion.textContent = template
-				.replace('{matched}', matchedRules)
-				.replace('{total}', rulesCount);
+			this._liveRegion.textContent =
+				FormValidationListElement.#expandCountTemplate(
+					this.announcement,
+					matchedRules,
+					rulesCount,
+				);
 		}
 
 		// Integrate with browser validation
@@ -888,9 +901,11 @@ export class FormValidationListElement extends HTMLElement {
 			const template =
 				this.validationMessage ||
 				'Please match all validation requirements ({matched} of {total})';
-			const message = template
-				.replace('{matched}', matchedRules)
-				.replace('{total}', this._rules.length);
+			const message = FormValidationListElement.#expandCountTemplate(
+				template,
+				matchedRules,
+				this._rules.length,
+			);
 			this._field.setCustomValidity(message);
 		}
 	}
@@ -913,8 +928,8 @@ export class FormValidationListElement extends HTMLElement {
 			this._field.removeEventListener('blur', this._blurHandler);
 		}
 
-		// Restore describedby before disconnecting
-		this._restoreDescribedBy();
+		// Remove this element from the field's aria-describedby on cleanup
+		this._removeOwnDescribedBy();
 
 		// Clear custom validity
 		if (this._field && this._field.setCustomValidity) {
