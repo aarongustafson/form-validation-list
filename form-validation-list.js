@@ -576,11 +576,13 @@ export class FormValidationListElement extends HTMLElement {
 		const existingDescribedBy =
 			this._field.getAttribute('aria-describedby');
 		if (existingDescribedBy) {
-			const describedByIds = existingDescribedBy.split(' ');
+			const describedByIds =
+				FormValidationListElement.#parseIdRefs(existingDescribedBy);
 			if (!describedByIds.includes(listId)) {
+				describedByIds.push(listId);
 				this._field.setAttribute(
 					'aria-describedby',
-					`${existingDescribedBy} ${listId}`,
+					describedByIds.join(' '),
 				);
 			}
 		} else {
@@ -592,7 +594,9 @@ export class FormValidationListElement extends HTMLElement {
 		if (this._describedBySuspended || !this._field || !this.id) return;
 		const current = this._field.getAttribute('aria-describedby');
 		if (!current) return;
-		const ids = current.split(' ').filter((id) => id !== this.id);
+		const ids = FormValidationListElement.#parseIdRefs(current).filter(
+			(id) => id !== this.id,
+		);
 		if (ids.length > 0) {
 			this._field.setAttribute('aria-describedby', ids.join(' '));
 		} else {
@@ -606,17 +610,20 @@ export class FormValidationListElement extends HTMLElement {
 		if (!this._describedBySuspended || !this._field || !this.id) return;
 		const current = this._field.getAttribute('aria-describedby');
 		if (current) {
-			const ids = current.split(' ');
+			const ids = FormValidationListElement.#parseIdRefs(current);
 			if (!ids.includes(this.id)) {
-				this._field.setAttribute(
-					'aria-describedby',
-					`${current} ${this.id}`,
-				);
+				ids.push(this.id);
+				this._field.setAttribute('aria-describedby', ids.join(' '));
 			}
 		} else {
 			this._field.setAttribute('aria-describedby', this.id);
 		}
 		this._describedBySuspended = false;
+	}
+
+	static #parseIdRefs(value) {
+		if (!value) return [];
+		return value.trim().split(/\s+/).filter(Boolean);
 	}
 
 	static #ensureRulePresentation(element) {
