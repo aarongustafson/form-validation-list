@@ -485,13 +485,21 @@ describe('FormValidationListElement', () => {
 				input.value = 'ABC';
 				input.dispatchEvent(new Event('input'));
 
-				expect(rule.classList.contains('validation-matched')).toBe(false);
-				expect(rule.classList.contains('validation-unmatched')).toBe(false);
+				expect(rule.classList.contains('validation-matched')).toBe(
+					false,
+				);
+				expect(rule.classList.contains('validation-unmatched')).toBe(
+					false,
+				);
 
 				vi.advanceTimersByTime(100);
 
-				expect(rule.classList.contains('validation-matched')).toBe(true);
-				expect(rule.classList.contains('validation-unmatched')).toBe(false);
+				expect(rule.classList.contains('validation-matched')).toBe(
+					true,
+				);
+				expect(rule.classList.contains('validation-unmatched')).toBe(
+					false,
+				);
 			} finally {
 				vi.useRealTimers();
 			}
