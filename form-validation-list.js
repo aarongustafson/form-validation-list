@@ -553,14 +553,24 @@ export class FormValidationListElement extends HTMLElement {
 		// Attach blur handler to restore aria-describedby
 		if (!this._blurHandler) {
 			this._blurHandler = () => {
+				// Cancel any pending throttle / per-rule delay timeouts and run
+				// a final synchronous validation (without live announcement)
+				// so rule state is up-to-date before restoring aria-describedby.
+				this._clearPendingInputThrottle();
+				this._clearPendingTimeouts();
+				if (this._field) {
+					this._validateField();
+				}
+
+				if (this._liveRegion) {
+					this._liveRegion.textContent = '';
+				}
+
 				this._clearPendingBlurRestore();
 				this._pendingBlurRestoreTimeout = setTimeout(() => {
 					this._pendingBlurRestoreTimeout = null;
 					this._restoreDescribedBy();
 				}, FormValidationListElement.#describedByRestoreDelay);
-				if (this._liveRegion) {
-					this._liveRegion.textContent = '';
-				}
 			};
 			this._field.addEventListener('blur', this._blurHandler);
 		}
@@ -887,14 +897,20 @@ export class FormValidationListElement extends HTMLElement {
 			fieldClassList.remove(validClass);
 		}
 
-		// Update live region with summary announcement
+		// Update live region with summary announcement only while typing
+		// (i.e. while aria-describedby is suspended). Keep it clear for
+		// blur-triggered or programmatic validation to avoid extra chatter.
 		if (this._liveRegion) {
-			this._liveRegion.textContent =
-				FormValidationListElement.#expandCountTemplate(
-					this.announcement,
-					matchedRules,
-					rulesCount,
-				);
+			if (this._describedBySuspended) {
+				this._liveRegion.textContent =
+					FormValidationListElement.#expandCountTemplate(
+						this.announcement,
+						matchedRules,
+						rulesCount,
+					);
+			} else {
+				this._liveRegion.textContent = '';
+			}
 		}
 
 		// Integrate with browser validation
