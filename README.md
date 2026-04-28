@@ -90,23 +90,39 @@ You can also include the guarded script from HTML:
 
 ## How It Works
 
+### Validation Flow
+
 1. Add a `for` attribute to the `<form-validation-list>` element with the ID of the input field you want to validate
 2. Inside the element, add list items (or any elements) with a `data-pattern` attribute containing a regular expression
-3. As the user types, the component will test the input value against each pattern
-4. While typing, the field temporarily stops referencing the full criteria list via `aria-describedby` to avoid duplicate announcements
-5. A single polite live region announces the localized summary using the `announcement` template
-6. Matched rules get the `validation-matched` class and show a checkmark; unmatched rules get `validation-unmatched` and show an X
-7. Once the field has a value, each rule also includes visually hidden localized state text such as "Criteria met" or "Criteria not met"
-8. On blur, the field's `aria-describedby` is restored so returning to the field reads the full criteria state again
-9. The component uses `setCustomValidity()` to participate in the browser's form validation
+3. Matched rules get the `validation-matched` class and show a checkmark; unmatched rules get `validation-unmatched` and show an X
+4. Once the field has a value, each rule also includes visually hidden localized state text such as "Criteria met" or "Criteria not met"
+5. The component uses `setCustomValidity()` to participate in the browser's form validation
+
+### Trigger Event Behavior
+
+#### With `trigger-event="input"` (default)
+
+- Validation runs on input events with a configurable delay (see `input-throttle`)
+- While typing, the field temporarily stops referencing the full criteria list via `aria-describedby` to avoid duplicate announcements
+- A single polite live region announces the localized summary using the `announcement` template
+- When the user blurs (leaves) the field:
+  - Any pending validation timeouts are cleared to prevent cascading updates
+  - The field's `aria-describedby` is restored after a brief delay so returning to the field reads the full criteria state again
+
+#### With `trigger-event="blur"`
+
+- Validation runs immediately (without throttling) when the user leaves the field
+- The `input-throttle` attribute is ignored
+- No aria-describedby suspension occurs, so the full criteria list remains visible while typing
+- No live region announcements occur during typing
 
 ## Attributes
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `for` | `string` | `""` | **Required.** The ID of the input field to validate |
-| `trigger-event` | `string` | `"input"` | The event to trigger validation on (`"input"` or `"blur"`) |
-| `input-throttle` | `number` | `250` | Delay in milliseconds before running validation for `input` events. Set to `0` to disable throttling. |
+| `trigger-event` | `string` | `"input"` | When to trigger validation: `"input"` (with throttle) or `"blur"` (immediate, no announcements while typing) |
+| `input-throttle` | `number` | `250` | Delay in milliseconds before running validation for `input` events. Only used when `trigger-event="input"`. Set to `0` to disable throttling. |
 | `each-delay` | `number` | `150` | Delay in milliseconds between each rule being classified (creates cascade effect) |
 | `field-invalid-class` | `string` | `"validation-invalid"` | Class to apply to the field when invalid |
 | `field-valid-class` | `string` | `"validation-valid"` | Class to apply to the field when valid |
@@ -288,14 +304,32 @@ The message template uses `{matched}` and `{total}` as placeholders that will be
 The component is built with accessibility in mind:
 
 - **Native List Semantics**: The component preserves the semantics of your existing `ul`/`li` markup
-- **Single Live Region**: A dedicated polite, atomic live region announces the localized summary while the user types
-- **ARIA Described-by**: The validation list is automatically associated with the input field via `aria-describedby`, then temporarily suspended while typing and restored on blur
+- **Smart Live Region**: A dedicated polite, atomic live region announces the localized summary only while the user types with `trigger-event="input"`, keeping screen reader chatter minimal
+- **ARIA Described-by Management**: The validation list is automatically associated with the input field via `aria-describedby`. With `trigger-event="input"`, the list is temporarily suspended while typing to avoid duplicate announcements, then restored on blur. With `trigger-event="blur"`, the list remains visible at all times.
+- **Timeout Cleanup**: Pending validation timeouts are cleared on blur to prevent cascading updates after focus leaves the field
 - **Localized Rule State**: Each rule gets visually hidden state text in the DOM once the field has a value, which works better with translation tooling than CSS-only alternative text
 - **Existing Descriptions**: If the field already has an `aria-describedby` attribute, the component preserves existing values and appends its own ID
 
 ### Screen Reader Experience
 
-When a user focuses on the input field, screen readers announce the field label followed by the validation requirements. While the user types, the component temporarily suspends the list from `aria-describedby` and instead announces the live summary from the `announcement` template. On blur, the full criteria description is restored so returning to the field reads the latest rule state again.
+#### With `trigger-event="input"` (recommended for complex validation)
+
+When a user focuses on the input field, screen readers announce the field label followed by the validation requirements. While the user types:
+- The full validation list is temporarily hidden from the screen reader via aria-describedby suspension
+- A concise live announcement summarizes progress using the `announcement` template (e.g., "Criteria met: 2 of 3")
+- This prevents overwhelming screen reader users with repetitive rule announcements on every keystroke
+
+On blur (when leaving the field):
+- Pending validations are cancelled to prevent stale updates
+- The field's `aria-describedby` is restored after a brief delay
+- Returning to the field will announce the final criteria state
+
+#### With `trigger-event="blur"` (for simple or expensive validation)
+
+- The full validation requirements remain visible via `aria-describedby` at all times
+- Validation only occurs when leaving the field
+- Validation happens immediately without throttling
+- Screen readers will read the full criteria only once on focus, then again on return if changes occurred
 
 ## Browser Validation Integration
 
