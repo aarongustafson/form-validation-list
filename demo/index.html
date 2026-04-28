@@ -19,11 +19,11 @@
 
 			/* Custom styling example */
 			.custom-styled {
-				--validation-icon-matched: '✅';
-				--validation-icon-unmatched: '❌';
-				--validation-icon-size: 1.2em;
-				--validation-matched-color: #28a745;
-				--validation-unmatched-color: #dc3545;
+				--rule-matched-icon: '✅';
+				--rule-unmatched-icon: '❌';
+				--rule-icon-size: 1.2em;
+				--rule-matched-color: #28a745;
+				--rule-unmatched-color: #dc3545;
 			}
 
 			.custom-styled ul {
@@ -194,12 +194,12 @@
 					</p>
 					<div class="code-demo-pair">
 						<pre><code>&lt;style&gt;
-  .custom-styled {
-    --validation-icon-matched: "✅";
-    --validation-icon-unmatched: "❌";
-    --validation-icon-size: 1.2em;
-    --validation-matched-color: #28a745;
-    --validation-unmatched-color: #dc3545;
+	.custom-styled {
+		--rule-matched-icon: "✅";
+		--rule-unmatched-icon: "❌";
+		--rule-icon-size: 1.2em;
+		--rule-matched-color: #28a745;
+		--rule-unmatched-color: #dc3545;
   }
 &lt;/style&gt;
 
@@ -474,20 +474,17 @@
 			<section>
 				<h2>Internationalization (i18n)</h2>
 				<p>
-					The <code>validation-message</code> attribute allows you to
-					customize the error message shown by the browser, including
-					support for other languages.
+					This example localizes the browser validation message, the live
+					summary announcement, and the per-rule hidden state text.
 				</p>
 
 				<div class="demo-section">
 					<h3>Spanish Validation Messages</h3>
 					<p>
 						Using
-						<code
-							>validation-message="Por favor, cumple todos los
-							requisitos ({matched} de {total})"</code
-						>
-						displays the validation error in Spanish.
+						<code>validation-message</code>, <code>announcement</code>,
+						and the <code>rule-*-alt</code> attributes keep the spoken
+						experience localized.
 					</p>
 					<div class="code-demo-pair">
 						<pre><code>&lt;form&gt;
@@ -500,6 +497,9 @@
 
   &lt;form-validation-list
     for="contrasena"
+		announcement="{matched} de {total} criterios cumplidos"
+		rule-matched-alt="Criterio cumplido"
+		rule-unmatched-alt="Criterio pendiente"
     validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"&gt;
     &lt;ul&gt;
       &lt;li data-pattern="[A-Z]+"&gt;Al menos una letra mayúscula&lt;/li&gt;
@@ -524,6 +524,9 @@
 
 								<form-validation-list
 									for="contrasena"
+									announcement="{matched} de {total} criterios cumplidos"
+									rule-matched-alt="Criterio cumplido"
+									rule-unmatched-alt="Criterio pendiente"
 									validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"
 								>
 									<ul>

@@ -52,9 +52,10 @@ describe('FormValidationListElement', () => {
 		element.disconnectedCallback();
 		element.connectedCallback();
 
+		const listId = element.querySelector('ul, ol').id;
 		const describedBy = input.getAttribute('aria-describedby');
 		expect(describedBy).toBeTruthy();
-		expect(describedBy).toContain(element.id);
+		expect(describedBy).toContain(listId);
 	});
 
 	it('should preserve existing aria-describedby values', () => {
@@ -69,9 +70,14 @@ describe('FormValidationListElement', () => {
 		element.setAttribute('for', 'test-input');
 		document.body.appendChild(element);
 
+		element.innerHTML = '<ul><li data-pattern="[A-Z]+">Capital</li></ul>';
+		element.disconnectedCallback();
+		element.connectedCallback();
+
+		const listId = element.querySelector('ul, ol').id;
 		const describedBy = input.getAttribute('aria-describedby');
 		expect(describedBy).toContain('existing-id');
-		expect(describedBy).toContain(element.id);
+		expect(describedBy).toContain(listId);
 	});
 
 	describe('property reflection', () => {
@@ -89,8 +95,15 @@ describe('FormValidationListElement', () => {
 
 		it('should reflect triggerEvent property to the attribute', () => {
 			const localElement = document.createElement('form-validation-list');
+			localElement.triggerEvent = 'blur';
+			expect(localElement.getAttribute('trigger-event')).toBe('blur');
+		});
+
+		it('should normalize unsupported trigger events to input', () => {
+			const localElement = document.createElement('form-validation-list');
 			localElement.triggerEvent = 'change';
-			expect(localElement.getAttribute('trigger-event')).toBe('change');
+			expect(localElement.getAttribute('trigger-event')).toBe('input');
+			expect(localElement.triggerEvent).toBe('input');
 		});
 
 		it('should upgrade properties set before connecting', async () => {
@@ -100,13 +113,13 @@ describe('FormValidationListElement', () => {
 
 			const localElement = document.createElement('form-validation-list');
 			localElement.fieldId = 'upgrade-input';
-			localElement.triggerEvent = 'change';
+			localElement.triggerEvent = 'blur';
 			localElement.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
 			localElement.setAttribute('each-delay', '0');
 			document.body.appendChild(localElement);
 
 			upgradeInput.value = 'TEST';
-			upgradeInput.dispatchEvent(new Event('change'));
+			upgradeInput.dispatchEvent(new Event('blur'));
 
 			await waitFor(() => {
 				expect(
@@ -145,11 +158,11 @@ describe('FormValidationListElement', () => {
 			});
 		});
 
-		it('should set aria-live and aria-atomic on rule elements', () => {
+		it('should set aria-atomic on rule elements (not aria-live)', () => {
 			const rules = element.querySelectorAll('[data-pattern]');
 			rules.forEach((rule) => {
-				expect(rule.getAttribute('aria-live')).toBe('polite');
 				expect(rule.getAttribute('aria-atomic')).toBe('true');
+				expect(rule.hasAttribute('aria-live')).toBe(false);
 			});
 		});
 
@@ -217,6 +230,24 @@ describe('FormValidationListElement', () => {
 			});
 		});
 
+		it('should replace all placeholders in validation-message template', async () => {
+			element.setAttribute(
+				'validation-message',
+				'Matched {matched}/{matched} of {total}/{total}',
+			);
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'test';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				expect(input.validationMessage).toBe('Matched 1/1 of 3/3');
+			});
+		});
+
 		it('should fire validation event', () => {
 			return new Promise((resolve) => {
 				element.addEventListener(
@@ -234,6 +265,116 @@ describe('FormValidationListElement', () => {
 				input.dispatchEvent(new Event('input'));
 			});
 		});
+
+		it('should create a live region with aria-live and aria-atomic', () => {
+			const liveRegion = document.querySelector(
+				'.form-validation-list-live-region',
+			);
+			expect(liveRegion).toBeTruthy();
+			expect(liveRegion.getAttribute('aria-live')).toBe('polite');
+			expect(liveRegion.getAttribute('aria-atomic')).toBe('true');
+		});
+
+		it('should update the live region with the announcement after validation', async () => {
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'Test123';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				const liveRegion = document.querySelector(
+					'.form-validation-list-live-region',
+				);
+				expect(liveRegion.textContent).toContain('3');
+			});
+		});
+
+		it('should replace all matched and total placeholders in announcement', async () => {
+			element.setAttribute(
+				'announcement',
+				'Matched {matched}/{matched} of {total}/{total}',
+			);
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			input.value = 'Test123';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				const liveRegion = document.querySelector(
+					'.form-validation-list-live-region',
+				);
+				expect(liveRegion.textContent).toBe('Matched 3/3 of 3/3');
+			});
+		});
+
+		it('should suspend aria-describedby on input and restore on blur', () => {
+			vi.useFakeTimers();
+
+			try {
+				element.setAttribute('each-delay', '0');
+				element.setAttribute('input-throttle', '0');
+				element.disconnectedCallback();
+				element.connectedCallback();
+
+				const listId = element.querySelector('ul, ol').id;
+				expect(input.getAttribute('aria-describedby')).toContain(
+					listId,
+				);
+
+				input.value = 'A';
+				input.dispatchEvent(new Event('input'));
+				const describedByDuringTyping =
+					input.getAttribute('aria-describedby');
+				expect(
+					describedByDuringTyping === null ||
+						!describedByDuringTyping.includes(listId),
+				).toBe(true);
+
+				input.dispatchEvent(new Event('blur'));
+				const describedByAfterBlur =
+					input.getAttribute('aria-describedby');
+				expect(
+					describedByAfterBlur === null ||
+						!describedByAfterBlur.includes(listId),
+				).toBe(true);
+
+				vi.advanceTimersByTime(200);
+				expect(input.getAttribute('aria-describedby')).toContain(
+					listId,
+				);
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('should toggle has-value class based on field content', async () => {
+			element.setAttribute('each-delay', '0');
+			element.setAttribute('input-throttle', '0');
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			expect(element.classList.contains('has-value')).toBe(false);
+
+			input.value = 'A';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				expect(element.classList.contains('has-value')).toBe(true);
+			});
+
+			input.value = '';
+			input.dispatchEvent(new Event('input'));
+
+			await waitFor(() => {
+				expect(element.classList.contains('has-value')).toBe(false);
+			});
+		});
 	});
 
 	describe('configuration attributes', () => {
@@ -242,8 +383,8 @@ describe('FormValidationListElement', () => {
 		});
 
 		it('should allow custom trigger event', () => {
-			element.setAttribute('trigger-event', 'keyup');
-			expect(element.triggerEvent).toBe('keyup');
+			element.setAttribute('trigger-event', 'blur');
+			expect(element.triggerEvent).toBe('blur');
 		});
 
 		it('should use default each-delay', () => {
@@ -271,6 +412,36 @@ describe('FormValidationListElement', () => {
 			expect(element.ruleMatchedClass).toBe('validation-matched');
 		});
 
+		it('should use default icon alt text', () => {
+			expect(element.ruleMatchedAlt).toBe('Criteria met');
+			expect(element.ruleUnmatchedAlt).toBe('Criteria not met');
+		});
+
+		it('should allow custom icon alt text', () => {
+			element.setAttribute('rule-matched-alt', 'Met');
+			element.setAttribute('rule-unmatched-alt', 'Not met');
+			expect(element.ruleMatchedAlt).toBe('Met');
+			expect(element.ruleUnmatchedAlt).toBe('Not met');
+		});
+
+		it('should use default announcement template', () => {
+			expect(element.announcement).toBe(
+				'Criteria met: {matched} of {total}',
+			);
+		});
+
+		it('should allow custom announcement template', () => {
+			element.setAttribute('announcement', '{matched}/{total} ok');
+			expect(element.announcement).toBe('{matched}/{total} ok');
+		});
+
+		it('should allow custom icons via attribute', () => {
+			element.setAttribute('rule-matched-icon', '✅');
+			element.setAttribute('rule-unmatched-icon', '❌');
+			expect(element.ruleMatchedIcon).toBe('✅');
+			expect(element.ruleUnmatchedIcon).toBe('❌');
+		});
+
 		it('should allow custom class names', () => {
 			element.setAttribute('field-invalid-class', 'custom-invalid');
 			element.setAttribute('field-valid-class', 'custom-valid');
@@ -289,9 +460,9 @@ describe('FormValidationListElement', () => {
 			element.disconnectedCallback();
 			element.connectedCallback();
 
-			element.setAttribute('trigger-event', 'change');
+			element.setAttribute('trigger-event', 'blur');
 			input.value = 'TEST';
-			input.dispatchEvent(new Event('change'));
+			input.dispatchEvent(new Event('blur'));
 
 			await waitFor(() => {
 				expect(
@@ -352,34 +523,44 @@ describe('FormValidationListElement', () => {
 		it('should throttle input-triggered validation and use latest value', () => {
 			vi.useFakeTimers();
 
-			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
-			element.setAttribute('each-delay', '0');
-			element.setAttribute('input-throttle', '100');
-			element.disconnectedCallback();
-			element.connectedCallback();
+			try {
+				element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
+				element.setAttribute('each-delay', '0');
+				element.setAttribute('input-throttle', '100');
+				element.disconnectedCallback();
+				element.connectedCallback();
 
-			const rule = element.querySelector('[data-pattern]');
+				const rule = element.querySelector('[data-pattern]');
 
-			input.value = 'abc';
-			input.dispatchEvent(new Event('input'));
+				input.value = 'abc';
+				input.dispatchEvent(new Event('input'));
 
-			input.value = 'ABC';
-			input.dispatchEvent(new Event('input'));
+				input.value = 'ABC';
+				input.dispatchEvent(new Event('input'));
 
-			expect(rule.classList.contains('validation-matched')).toBe(false);
-			expect(rule.classList.contains('validation-unmatched')).toBe(false);
+				expect(rule.classList.contains('validation-matched')).toBe(
+					false,
+				);
+				expect(rule.classList.contains('validation-unmatched')).toBe(
+					false,
+				);
 
-			vi.advanceTimersByTime(100);
+				vi.advanceTimersByTime(100);
 
-			expect(rule.classList.contains('validation-matched')).toBe(true);
-			expect(rule.classList.contains('validation-unmatched')).toBe(false);
-
-			vi.useRealTimers();
+				expect(rule.classList.contains('validation-matched')).toBe(
+					true,
+				);
+				expect(rule.classList.contains('validation-unmatched')).toBe(
+					false,
+				);
+			} finally {
+				vi.useRealTimers();
+			}
 		});
 
-		it('should not throttle non-input trigger events', () => {
+		it('should not throttle blur trigger events', () => {
 			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital letter</li></ul>`;
-			element.setAttribute('trigger-event', 'change');
+			element.setAttribute('trigger-event', 'blur');
 			element.setAttribute('input-throttle', '1000');
 			element.setAttribute('each-delay', '0');
 			element.disconnectedCallback();
@@ -387,7 +568,7 @@ describe('FormValidationListElement', () => {
 
 			const rule = element.querySelector('[data-pattern]');
 			input.value = 'ABC';
-			input.dispatchEvent(new Event('change'));
+			input.dispatchEvent(new Event('blur'));
 
 			expect(rule.classList.contains('validation-matched')).toBe(true);
 			expect(rule.classList.contains('validation-unmatched')).toBe(false);
@@ -424,6 +605,23 @@ describe('FormValidationListElement', () => {
 	});
 
 	describe('cleanup', () => {
+		it('should remove only this id from aria-describedby when disconnected', () => {
+			input.setAttribute('aria-describedby', 'existing-id');
+			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
+			element.disconnectedCallback();
+			element.connectedCallback();
+
+			const listId = element.querySelector('ul, ol').id;
+			expect(input.getAttribute('aria-describedby')).toContain(
+				'existing-id',
+			);
+			expect(input.getAttribute('aria-describedby')).toContain(listId);
+
+			element.disconnectedCallback();
+
+			expect(input.getAttribute('aria-describedby')).toBe('existing-id');
+		});
+
 		it('should cleanup when disconnected', async () => {
 			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
 			element.setAttribute('each-delay', '0');
@@ -444,14 +642,25 @@ describe('FormValidationListElement', () => {
 		});
 
 		it('should cleanup when for attribute changes', () => {
+			const nextInput = document.createElement('input');
+			nextInput.type = 'text';
+			nextInput.id = 'next-input';
+			document.body.appendChild(nextInput);
+
 			element.innerHTML = `<ul><li data-pattern="[A-Z]+">Capital</li></ul>`;
 			element.disconnectedCallback();
 			element.connectedCallback();
 
 			const oldField = element._field;
-			element.setAttribute('for', 'non-existent');
+			oldField.setAttribute('aria-describedby', 'existing-id');
+			element._setupAccessibility();
+
+			element.setAttribute('for', 'next-input');
 
 			expect(element._field).not.toBe(oldField);
+			expect(oldField.getAttribute('aria-describedby')).toBe(
+				'existing-id',
+			);
 		});
 	});
 });
