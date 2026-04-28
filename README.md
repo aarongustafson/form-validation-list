@@ -156,6 +156,50 @@ You can also include the guarded script from HTML:
 </form-validation-list>
 ```
 
+## Generated Markup
+
+The component automatically enhances your markup with additional elements and IDs:
+
+**Your HTML:**
+
+```html
+<form-validation-list for="password">
+  <ul>
+    <li data-pattern=".{8,}">At least 8 characters</li>
+  </ul>
+</form-validation-list>
+```
+
+**Generated DOM (simplified):**
+
+```html
+<form-validation-list for="password">
+  <ul id="form-validation-list-abc123xyz">
+    <li data-pattern=".{8,}" class="validation-unmatched" aria-atomic="true">
+      <span class="form-validation-list-rule-icon" aria-hidden="true"></span>
+      <span class="form-validation-list-rule-state">Criteria not met </span>
+      At least 8 characters
+    </li>
+  </ul>
+  <span aria-live="polite" aria-atomic="true" class="form-validation-list-live-region"></span>
+</form-validation-list>
+```
+
+**What gets added:**
+
+- **List ID**: A unique ID is assigned to your `<ul>` or `<ol>` element and linked to the input via `aria-describedby`
+- **Rule icon span**: A `<span class="form-validation-list-rule-icon">` is prepended to each rule showing ✓ or ✗
+  - `aria-hidden="true"` prevents screen readers from announcing the icon
+  - Content controlled via the `rule-matched-icon` and `rule-unmatched-icon` attributes or the `--rule-matched-icon` and `--rule-unmatched-icon` CSS properties
+- **Rule state span**: A `<span class="form-validation-list-rule-state">` is inserted after the icon with visually hidden state text
+  - Hidden with `clip: rect(0 0 0 0)` and `position: absolute`
+  - Contains localized state text (default: “Criteria met ” or “Criteria not met ”, configurable via `rule-matched-alt` and `rule-unmatched-alt` attributes)
+  - Only populated when the field has a value (`.has-value` class on the component)
+- **Live region**: A `<span class="form-validation-list-live-region">` with `aria-live="polite"` is added as a sibling to your list
+  - Only updated while typing with `trigger-event="input"`
+  - Cleared on blur and during programmatic validation
+
+
 ## Validation Rules
 
 Rules are defined using the `data-pattern` attribute on any element inside the `<form-validation-list>`. The value should be a valid regular expression pattern.
