@@ -33,8 +33,6 @@ export declare class FormValidationListElement extends HTMLElement {
 	get isValid(): boolean;
 }
 
-export declare function defineFormValidationList(tagName?: string): boolean;
-
 declare global {
 	interface HTMLElementTagNameMap {
 		'form-validation-list': FormValidationListElement;
