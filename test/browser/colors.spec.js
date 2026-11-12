@@ -268,6 +268,43 @@ for (const scheme of ['light', 'dark']) {
 	});
 }
 
+test('blur-triggered demo aligns rule text before and after validation', async ({
+	page,
+}) => {
+	await page.goto('/demo/index.html');
+	const host = page.locator('form-validation-list[for=custom-trigger]');
+	await expect(host.locator('.form-validation-list-rule-icon')).toHaveCount(
+		3,
+	);
+	for (const width of [1280, 320]) {
+		await page.setViewportSize({ width, height: 900 });
+		for (const value of ['', 'Abc1']) {
+			await page.locator('#custom-trigger').fill(value);
+			await page.locator('#custom-trigger').press('Tab');
+			if (value)
+				await expect(host.locator('.validation-matched')).toHaveCount(
+					3,
+				);
+			const starts = await host.locator('li').evaluateAll((rules) =>
+				rules.map((rule) => {
+					const text = [...rule.childNodes].find(
+						(node) =>
+							node.nodeType === Node.TEXT_NODE &&
+							/\S/.test(node.textContent),
+					);
+					if (!text) throw new Error('Expected authored rule text.');
+					const start = text.textContent.search(/\S/);
+					const range = document.createRange();
+					range.setStart(text, start);
+					range.setEnd(text, start + 1);
+					return range.getBoundingClientRect().x;
+				}),
+			);
+			expect(Math.max(...starts) - Math.min(...starts)).toBeLessThan(1);
+		}
+	}
+});
+
 test('contrast measurement ignores unpainted boundaries and composites translucent foregrounds', async ({
 	page,
 }) => {
