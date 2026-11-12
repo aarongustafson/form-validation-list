@@ -25,8 +25,8 @@
  * @cssprop --rule-matched-icon - Icon for matched state (default: "✓"). Alias: --validation-icon-matched
  * @cssprop --rule-unmatched-icon - Icon for unmatched state (default: "✗"). Alias: --validation-icon-unmatched
  * @cssprop --rule-icon-size - Size of the validation icons (default: 1em). Alias: --validation-icon-size
- * @cssprop --rule-matched-color - Color for matched rules (default: green). Alias: --validation-matched-color
- * @cssprop --rule-unmatched-color - Color for unmatched rules (default: red). Alias: --validation-unmatched-color
+ * @cssprop --rule-matched-color - Matched icon color (default: currentColor, inherited from its rule). Alias: --validation-matched-color
+ * @cssprop --rule-unmatched-color - Unmatched icon color (default: currentColor, inherited from its rule). Alias: --validation-unmatched-color
  */
 export class FormValidationListElement extends HTMLElement {
 	static #stylesInjected = false;
@@ -79,15 +79,15 @@ export class FormValidationListElement extends HTMLElement {
 					var(--rule-unmatched-icon, var(--validation-icon-unmatched, "✗"))
 				);
 				display: inline-block;
-				color: var(--rule-unmatched-color, var(--validation-unmatched-color, red));
+				color: var(--rule-unmatched-color, var(--validation-unmatched-color, currentColor));
 			}
 
-			form-validation-list [data-pattern].validation-matched > .form-validation-list-rule-icon::before {
+			form-validation-list [data-pattern] > .form-validation-list-rule-icon[data-matched]::before {
 				content: var(
 					--form-validation-list-rule-matched-icon,
 					var(--rule-matched-icon, var(--validation-icon-matched, "✓"))
 				);
-				color: var(--rule-matched-color, var(--validation-matched-color, green));
+				color: var(--rule-matched-color, var(--validation-matched-color, currentColor));
 			}
 
 			.form-validation-list-rule-state {
@@ -731,9 +731,10 @@ export class FormValidationListElement extends HTMLElement {
 
 		for (let i = 0; i < this._rules.length; i++) {
 			const { element } = this._rules[i];
-			const { stateElement } =
+			const { iconElement, stateElement } =
 				FormValidationListElement.#ensureRulePresentation(element);
 			const isMatched = element.classList.contains(this.ruleMatchedClass);
+			iconElement.toggleAttribute('data-matched', isMatched);
 			stateElement.textContent = this._hasValue
 				? `${isMatched ? this.ruleMatchedAlt : this.ruleUnmatchedAlt} `
 				: '';
@@ -932,8 +933,9 @@ export class FormValidationListElement extends HTMLElement {
 	}
 
 	_toggleMatchedClasses(element, matched) {
-		const { stateElement } =
+		const { iconElement, stateElement } =
 			FormValidationListElement.#ensureRulePresentation(element);
+		iconElement.toggleAttribute('data-matched', matched);
 		const classList = element.classList;
 		if (matched) {
 			classList.add(this.ruleMatchedClass);
@@ -1009,6 +1011,9 @@ export class FormValidationListElement extends HTMLElement {
 				matchedClass,
 				unmatchedClass,
 			);
+			this._rules[i].element
+				.querySelector(':scope > .form-validation-list-rule-icon')
+				?.removeAttribute('data-matched');
 		}
 
 		// Remove live region

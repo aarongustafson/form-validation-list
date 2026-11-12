@@ -7,22 +7,69 @@
 		<link rel="stylesheet" href="./styles.css" />
 	</head>
 	<body>
-		<h1>unpkg CDN sanity check</h1>
-		<p>
-			This page loads the guarded definition helper from
-			<code>unpkg</code> and registers the element when supported.
-		</p>
+		<header>
+			<h1>form-validation-list via unpkg</h1>
+			<p>
+				Password requirements with default check/cross icons. See the
+				<a href="../README.md">README</a> for the full API.
+			</p>
+		</header>
+		<main>
+			<section class="demo-section">
+				<h2>Load the guarded registration helper</h2>
+				<p>
+					Importing <code>define.js</code> registers the default
+					element when supported. Calling the exported helper again is
+					safe. Both icon states inherit the rule’s text color.
+				</p>
+				<div class="code-demo-pair">
+					<pre><code>import { defineFormValidationList } from
+  'https://unpkg.com/@aarongustafson/form-validation-list@latest/define.js?module';
 
-		<label for="password">Password</label>
-		<input type="password" id="password" name="password" />
+defineFormValidationList();
 
-		<form-validation-list for="password">
-			<ul>
-				<li data-pattern=".{8,}">At least 8 characters</li>
-				<li data-pattern="[A-Z]+">One uppercase letter</li>
-				<li data-pattern="[\d]+">One number</li>
-			</ul>
-		</form-validation-list>
+&lt;label for="password"&gt;Password&lt;/label&gt;
+&lt;input type="password" id="password" name="password"&gt;
+&lt;form-validation-list for="password"&gt;
+  &lt;ul&gt;
+    &lt;li data-pattern=".{8,}"&gt;At least 8 characters&lt;/li&gt;
+    &lt;li data-pattern="[A-Z]+"&gt;One uppercase letter&lt;/li&gt;
+    &lt;li data-pattern="[\d]+"&gt;One number&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/form-validation-list&gt;</code></pre>
+					<div class="demo">
+						<label for="password">Password</label>
+						<input type="password" id="password" name="password" />
+						<form-validation-list for="password">
+							<ul>
+								<li data-pattern=".{8,}">
+									At least 8 characters
+								</li>
+								<li data-pattern="[A-Z]+">
+									One uppercase letter
+								</li>
+								<li data-pattern="[\d]+">One number</li>
+							</ul>
+						</form-validation-list>
+					</div>
+				</div>
+			</section>
+			<p>
+				If the module cannot load, the field and requirements remain
+				visible, but the extra rules are not enforced. Always validate
+				submitted values on the server.
+			</p>
+		</main>
+		<footer>
+			<p>
+				Made with ❤️ by
+				<a href="https://github.com/aarongustafson">Aaron Gustafson</a>.
+				View the source on
+				<a href="https://github.com/aarongustafson/form-validation-list"
+					>GitHub</a
+				>.
+			</p>
+		</footer>
 
 		<script type="module">
 			import { defineFormValidationList } from 'https://unpkg.com/@aarongustafson/form-validation-list@latest/define.js?module';

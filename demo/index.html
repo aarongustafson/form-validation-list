@@ -14,20 +14,21 @@
 
 			form-validation-list li {
 				padding: 0.25rem 0;
-				transition: all 0.3s ease;
 			}
 
 			/* Custom styling example */
 			.custom-styled {
-				--rule-matched-icon: '✅';
-				--rule-unmatched-icon: '❌';
+				display: block;
+				--rule-matched-icon: '✔';
+				--rule-unmatched-icon: '✘';
 				--rule-icon-size: 1.2em;
-				--rule-matched-color: #28a745;
-				--rule-unmatched-color: #dc3545;
+				--rule-matched-color: #17652e;
+				--rule-unmatched-color: #982b39;
+				background: #fff;
+				color: #202020;
 			}
 
 			.custom-styled ul {
-				background: ButtonFace;
 				padding: 1rem;
 				border-radius: 4px;
 			}
@@ -45,6 +46,14 @@
 		</header>
 
 		<main>
+			<p>
+				Matched rules show a check; unmatched rules show a cross. Both
+				inherit the rule’s text color by default. Once a field has a
+				value, localized hidden text also identifies each rule’s state.
+				Without JavaScript, the fields and requirements remain visible,
+				but these extra rules are not enforced. Always validate
+				submitted values on the server.
+			</p>
 			<!-- Basic Example -->
 			<section>
 				<h2>Basic Password Validation</h2>
@@ -189,17 +198,23 @@
 				<div class="demo-section">
 					<h3>Custom Icons and Colors</h3>
 					<p>
-						This example uses custom emojis and colors for the
-						validation icons.
+						This example uses monochrome glyphs and green/red icon
+						colors on an explicit white surface. Both colors have at
+						least 4.5:1 contrast against that surface. The check and
+						cross still distinguish states without color. Automatic
+						forced-color adjustment remains enabled.
 					</p>
 					<div class="code-demo-pair">
 						<pre><code>&lt;style&gt;
-	.custom-styled {
-		--rule-matched-icon: "✅";
-		--rule-unmatched-icon: "❌";
-		--rule-icon-size: 1.2em;
-		--rule-matched-color: #28a745;
-		--rule-unmatched-color: #dc3545;
+  .custom-styled {
+    display: block;
+    --rule-matched-icon: "✔";
+    --rule-unmatched-icon: "✘";
+    --rule-icon-size: 1.2em;
+    --rule-matched-color: #17652e;
+    --rule-unmatched-color: #982b39;
+    background: #fff;
+    color: #202020;
   }
 &lt;/style&gt;
 
@@ -307,7 +322,9 @@
 										<li data-pattern="[a-z]+">
 											Lowercase letter
 										</li>
-										<li data-pattern="[\d]+">Number</li>
+										<li data-pattern="[\d]+">
+											&#32;Number
+										</li>
 									</ul>
 								</form-validation-list>
 
@@ -328,10 +345,10 @@
 					</p>
 					<div class="code-demo-pair">
 						<pre><code>&lt;style&gt;
-  .is-valid { border-color: green; }
-  .is-invalid { border-color: red; }
-  .rule-pass { color: green; }
-  .rule-fail { color: red; }
+  input.is-valid { border: 2px solid FieldText; }
+  input.is-invalid { border: 2px dashed FieldText; }
+  .rule-pass { font-weight: bold; }
+  .rule-fail { font-style: italic; }
 &lt;/style&gt;
 
 &lt;form-validation-list
@@ -347,20 +364,20 @@
 &lt;/form-validation-list&gt;</code></pre>
 						<div class="demo">
 							<style>
-								.is-valid {
-									border-color: green;
+								input.is-valid {
+									border-color: FieldText;
 									border-width: 2px;
+									border-style: solid;
 								}
-								.is-invalid {
-									border-color: red;
+								input.is-invalid {
+									border-color: FieldText;
 									border-width: 2px;
+									border-style: dashed;
 								}
 								.rule-pass {
-									color: green;
 									font-weight: bold;
 								}
 								.rule-fail {
-									color: red;
 									font-style: italic;
 								}
 							</style>
@@ -394,7 +411,9 @@
 
 								<small
 									>Uses custom classes: is-valid/is-invalid,
-									rule-pass/rule-fail</small
+									rule-pass/rule-fail. Solid/dashed field
+									borders and check/cross icons distinguish
+									states without color.</small
 								>
 							</form>
 						</div>
@@ -474,16 +493,18 @@
 			<section>
 				<h2>Internationalization (i18n)</h2>
 				<p>
-					This example localizes the browser validation message, the live
-					summary announcement, and the per-rule hidden state text.
+					This example localizes the browser validation message, the
+					live summary announcement, and the per-rule hidden state
+					text.
 				</p>
 
 				<div class="demo-section">
 					<h3>Spanish Validation Messages</h3>
 					<p>
 						Using
-						<code>validation-message</code>, <code>announcement</code>,
-						and the <code>rule-*-alt</code> attributes keep the spoken
+						<code>validation-message</code>,
+						<code>announcement</code>, and the
+						<code>rule-*-alt</code> attributes keep the spoken
 						experience localized.
 					</p>
 					<div class="code-demo-pair">
@@ -497,9 +518,9 @@
 
   &lt;form-validation-list
     for="contrasena"
-		announcement="{matched} de {total} criterios cumplidos"
-		rule-matched-alt="Criterio cumplido"
-		rule-unmatched-alt="Criterio pendiente"
+    announcement="{matched} de {total} criterios cumplidos"
+    rule-matched-alt="Criterio cumplido"
+    rule-unmatched-alt="Criterio pendiente"
     validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"&gt;
     &lt;ul&gt;
       &lt;li data-pattern="[A-Z]+"&gt;Al menos una letra mayúscula&lt;/li&gt;
@@ -513,7 +534,7 @@
   &lt;button type="submit"&gt;Enviar&lt;/button&gt;
 &lt;/form&gt;</code></pre>
 						<div class="demo">
-							<form id="form5">
+							<form id="form5" lang="es">
 								<label for="contrasena">Contraseña:</label>
 								<input
 									type="password"
