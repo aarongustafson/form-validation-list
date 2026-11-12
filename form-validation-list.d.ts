@@ -1,6 +1,6 @@
 export declare class FormValidationListElement extends HTMLElement {
-	get ["for"](): string | null;
-	set ["for"](value: string | null);
+	get ['for'](): string | null;
+	set ['for'](value: string | null);
 	get fieldId(): string | null;
 	set fieldId(value: string | null);
 	get triggerEvent(): string;

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+	<meta charset="utf-8" />
+	<title>Validation color fixture</title>
+	<style>
+		:root {
+			color-scheme: light dark;
+		}
+		body {
+			background: Canvas;
+			color: CanvasText;
+		}
+	</style>
+	<form>
+		<label for="value">Username</label>
+		<input id="value" name="username" required />
+		<form-validation-list for="value" input-throttle="0" each-delay="0">
+			<ul>
+				<li data-pattern="[A-Z]">Capital letter</li>
+				<li data-pattern="[0-9]">Number</li>
+			</ul>
+		</form-validation-list>
+		<button type="submit">Submit</button>
+	</form>
+	<script type="module" src="../../define.js"></script>
+</html>

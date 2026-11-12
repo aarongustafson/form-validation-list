@@ -46,6 +46,29 @@ describe('FormValidationListElement', () => {
 		expect(element._field).toBe(input);
 	});
 
+	it('keeps icon state independent of custom rule classes and clears it on cleanup', () => {
+		element.disconnectedCallback();
+		element.innerHTML = '<ul><li data-pattern="[A-Z]">Capital</li></ul>';
+		element.eachDelay = 0;
+		element.ruleMatchedClass = 'rule-pass';
+		element.ruleUnmatchedClass = 'rule-fail';
+		input.value = 'A';
+		element.connectedCallback();
+		const icon = element.querySelector('.form-validation-list-rule-icon');
+		expect(icon.hasAttribute('data-matched')).toBe(true);
+		element.ruleMatchedClass = 'passed';
+		element.ruleMatchedAlt = 'Criterio cumplido';
+		expect(icon.hasAttribute('data-matched')).toBe(true);
+		input.value = 'a';
+		element.validate();
+		expect(icon.hasAttribute('data-matched')).toBe(false);
+		input.value = 'A';
+		element.validate();
+		expect(icon.hasAttribute('data-matched')).toBe(true);
+		element.remove();
+		expect(icon.hasAttribute('data-matched')).toBe(false);
+	});
+
 	it('should set up aria-describedby on the input field', () => {
 		// Need to add rules for the element to set up aria-describedby
 		element.innerHTML = '<ul><li data-pattern="[A-Z]+">Capital</li></ul>';
