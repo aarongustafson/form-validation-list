@@ -252,6 +252,11 @@ for (const scheme of ['light', 'dark']) {
 		]) {
 			await field.fill(value);
 			await expect(host.locator(`.${state}`)).toHaveCount(2);
+			await expect(field).toHaveCSS(
+				'border-top-style',
+				state === 'rule-fail' ? 'dashed' : 'solid',
+			);
+			await expect(field).toHaveCSS('border-top-width', '2px');
 			for (const rule of await host.locator('[data-pattern]').all()) {
 				expect((await measurements(rule)).text).toBeGreaterThanOrEqual(
 					4.5,
@@ -657,6 +662,7 @@ for (const mode of ['no JavaScript', 'module failure']) {
 	}) => {
 		const context = await browser.newContext({
 			javaScriptEnabled: mode !== 'no JavaScript',
+			colorScheme: 'dark',
 		});
 		try {
 			const page = await context.newPage();
@@ -669,6 +675,25 @@ for (const mode of ['no JavaScript', 'module failure']) {
 			await expect(
 				page.locator('form-validation-list').first(),
 			).toContainText('At least one capital letter');
+			const custom = page.locator('.custom-styled');
+			await expect(custom).toHaveCSS('display', 'block');
+			const surface = await custom.boundingBox();
+			expect(surface).not.toBeNull();
+			for (const rule of await custom.locator('[data-pattern]').all()) {
+				const bounds = await rule.boundingBox();
+				expect(bounds).not.toBeNull();
+				expect(bounds.x).toBeGreaterThanOrEqual(surface.x);
+				expect(bounds.y).toBeGreaterThanOrEqual(surface.y);
+				expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+					surface.x + surface.width,
+				);
+				expect(bounds.y + bounds.height).toBeLessThanOrEqual(
+					surface.y + surface.height,
+				);
+				expect((await measurements(rule)).text).toBeGreaterThanOrEqual(
+					4.5,
+				);
+			}
 			await page.getByLabel('Username:', { exact: true }).fill('Abc1');
 			await expect(
 				page.locator('.form-validation-list-rule-icon'),

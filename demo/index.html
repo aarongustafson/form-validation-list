@@ -18,6 +18,7 @@
 
 			/* Custom styling example */
 			.custom-styled {
+				display: block;
 				--rule-matched-icon: '✔';
 				--rule-unmatched-icon: '✘';
 				--rule-icon-size: 1.2em;
@@ -206,6 +207,7 @@
 					<div class="code-demo-pair">
 						<pre><code>&lt;style&gt;
   .custom-styled {
+    display: block;
     --rule-matched-icon: "✔";
     --rule-unmatched-icon: "✘";
     --rule-icon-size: 1.2em;
@@ -343,8 +345,8 @@
 					</p>
 					<div class="code-demo-pair">
 						<pre><code>&lt;style&gt;
-  .is-valid { border: 2px solid FieldText; }
-  .is-invalid { border: 2px dashed FieldText; }
+  input.is-valid { border: 2px solid FieldText; }
+  input.is-invalid { border: 2px dashed FieldText; }
   .rule-pass { font-weight: bold; }
   .rule-fail { font-style: italic; }
 &lt;/style&gt;
@@ -362,12 +364,12 @@
 &lt;/form-validation-list&gt;</code></pre>
 						<div class="demo">
 							<style>
-								.is-valid {
+								input.is-valid {
 									border-color: FieldText;
 									border-width: 2px;
 									border-style: solid;
 								}
-								.is-invalid {
+								input.is-invalid {
 									border-color: FieldText;
 									border-width: 2px;
 									border-style: dashed;

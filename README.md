@@ -317,6 +317,7 @@ authored contrast.
 
 ```css
 form-validation-list {
+  display: block;
   --rule-matched-icon: '✔';
   --rule-unmatched-icon: '✘';
   --rule-icon-size: 1.2em;
@@ -337,6 +338,8 @@ form-validation-list li {
 ```
 
 Both custom icon colors above exceed 4.5:1 on the explicit white background.
+The authored `display: block` keeps that background behind the list even if
+JavaScript is disabled or the module cannot load.
 Monochrome glyphs follow the color hooks; color emoji may not. See the
 [custom-color demo](./demo/index.html) for the code and working example.
 
