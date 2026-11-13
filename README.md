@@ -1,6 +1,10 @@
 # form-validation-list Web Component
 
-[![npm version](https://img.shields.io/npm/v/@aarongustafson/form-validation-list.svg)](https://www.npmjs.com/package/@aarongustafson/form-validation-list) [![Build Status](https://img.shields.io/github/actions/workflow/status/aarongustafson/form-validation-list/ci.yml?branch=main)](https://github.com/aarongustafson/form-validation-list/actions)
+[![npm version](https://img.shields.io/npm/v/@aarongustafson/form-validation-list.svg)](https://www.npmjs.com/package/@aarongustafson/form-validation-list)
+[![CI status](https://img.shields.io/github/actions/workflow/status/aarongustafson/form-validation-list/ci.yml?branch=main&label=CI)](https://github.com/aarongustafson/form-validation-list/actions/workflows/ci.yml)
+[![Minified + gzipped size](https://img.shields.io/bundlejs/size/@aarongustafson/form-validation-list?format=minzip&label=min%2Bgzip)](https://bundlejs.com/?q=@aarongustafson/form-validation-list)
+[![License](https://img.shields.io/npm/l/@aarongustafson/form-validation-list)](https://github.com/aarongustafson/form-validation-list/blob/main/LICENSE)
+[![Type definitions](https://img.shields.io/npm/types/@aarongustafson/form-validation-list)](https://github.com/aarongustafson/form-validation-list/blob/main/form-validation-list.d.ts)
 
 A web component that checks a field against a list of regular expression rules.
 Each rule shows a checkmark (✓) or cross (✗), with localized hidden state text
