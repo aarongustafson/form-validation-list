@@ -1,6 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+	await page.route(
+		'https://cdn.jsdelivr.net/npm/microlighter@2.2.0/dist/**',
+		(route) => route.abort(),
+	);
+});
+
 const demoCSS = await readFile(
 	new URL('../../demo/styles.css', import.meta.url),
 	'utf8',
@@ -602,7 +609,9 @@ for (const demo of ['index.html', 'esm.html', 'unpkg.html']) {
 			const pairs = page.locator('.code-demo-pair');
 			expect(await pairs.count()).toBeGreaterThan(0);
 			for (const pair of await pairs.all()) {
-				const code = await pair.locator('pre').boundingBox();
+				const code = await pair
+					.locator(':scope > micro-lighter')
+					.boundingBox();
 				const live = await pair.locator('.demo').boundingBox();
 				expect(code).not.toBeNull();
 				expect(live).not.toBeNull();
@@ -630,7 +639,8 @@ for (const demo of ['index.html', 'esm.html', 'unpkg.html']) {
 				.locator('.validation-matched'),
 		).toHaveCount(3);
 		await expect(firstField).toBeFocused();
-		await expect(firstField).toHaveCSS('outline-style', 'auto');
+		await expect(firstField).toHaveCSS('outline-style', 'solid');
+		await expect(firstField).toHaveCSS('outline-width', '3px');
 		if (demo === 'index.html') {
 			await page.locator('#email').fill('a@b.co');
 			const icons = page.locator(

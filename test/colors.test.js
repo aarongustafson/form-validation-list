@@ -9,7 +9,7 @@ describe('displayed demo code', () => {
 		(page) => {
 			const blocks = [
 				...read(`../demo/${page}`).matchAll(
-					/<pre><code>([\s\S]*?)<\/code><\/pre>/g,
+					/<pre\b[^>]*><code>([\s\S]*?)<\/code><\/pre>/g,
 				),
 			].map((match) => match[1]);
 			expect(blocks.length).toBeGreaterThan(0);
