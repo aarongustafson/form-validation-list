@@ -676,6 +676,10 @@ for (const mode of ['no JavaScript', 'module failure']) {
 		});
 		try {
 			const page = await context.newPage();
+			await page.route(
+				'https://cdn.jsdelivr.net/npm/microlighter@2.2.0/dist/**',
+				(route) => route.abort(),
+			);
 			if (mode === 'module failure')
 				await page.route('**/define.js', (route) => route.abort());
 			await page.goto('/demo/index.html');
