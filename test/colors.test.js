@@ -69,6 +69,8 @@ describe('system-color styling contracts', () => {
 		expect(css).toMatch(/border:\s*1px solid FieldText/);
 		expect(css).toMatch(/border:\s*1px solid ButtonText/);
 		expect(css).toMatch(/\.demo\s*\{[^}]*color:\s*CanvasText/);
-		expect(css).toMatch(/\.demo-section\s*\{[^}]*color:\s*ButtonText/);
+		expect(css).not.toMatch(
+			/\.demo-section\s*\{[^}]*(?:\bcolor|\bbackground(?:-[\w-]+)?):/,
+		);
 	});
 });
