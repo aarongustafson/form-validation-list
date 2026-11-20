@@ -58,16 +58,22 @@ describe('system-color styling contracts', () => {
 	);
 
 	it('keeps demo surfaces paired, necessary borders visible, and native focus available', () => {
-		const css = read('../demo/styles.css');
+		const localCSS = read('../demo/styles.css');
+		const css = read('../demo/demo-shell.css') + localCSS;
 		expect(css).not.toMatch(
 			/GrayText|SelectedItem|HighlightText|ActiveText/,
 		);
-		expect(css).not.toMatch(/opacity:\s*0\.8|:focus-visible/);
+		expect(css).not.toMatch(/opacity:\s*0\.8/);
+		expect(localCSS).not.toMatch(/:focus-visible/);
 		expect(css + read('../form-validation-list.js')).not.toMatch(
 			/forced-color-adjust:\s*none/,
 		);
-		expect(css).toMatch(/border:\s*1px solid FieldText/);
-		expect(css).toMatch(/border:\s*1px solid ButtonText/);
+		expect(css).toMatch(
+			/textarea\s*\{[^}]*border:\s*1px solid currentColor;[^}]*color:\s*FieldText;/,
+		);
+		expect(css).toMatch(
+			/button\[type='reset'\]\s*\{[^}]*color:\s*ButtonText;[^}]*border:\s*1px solid currentColor;/,
+		);
 		expect(css).toMatch(/\.demo\s*\{[^}]*color:\s*CanvasText/);
 		expect(css).not.toMatch(
 			/\.demo-section\s*\{[^}]*(?:\bcolor|\bbackground(?:-[\w-]+)?):/,

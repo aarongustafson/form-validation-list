@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
+import { expectNativeFocus, readDemoStyles } from './demo-fixture.js';
 
 test.beforeEach(async ({ page }) => {
 	await page.route(
@@ -8,13 +9,7 @@ test.beforeEach(async ({ page }) => {
 	);
 });
 
-const demoCSS = (
-	await Promise.all(
-		['styles.css', 'demo-shell.css'].map((file) =>
-			readFile(new URL(`../../demo/${file}`, import.meta.url), 'utf8'),
-		),
-	)
-).join('\n');
+const demoCSS = await readDemoStyles();
 const componentSource = await readFile(
 	new URL('../../form-validation-list.js', import.meta.url),
 	'utf8',
@@ -351,6 +346,9 @@ test('19 study palettes retain readable default status icons and paired demo sur
 	page,
 }) => {
 	await fixture(page);
+	await page.locator('body').evaluate((body) => {
+		body.dataset.demoPage = 'full';
+	});
 	await page.locator('input').fill('A');
 	await page.locator('form').evaluate((element) => {
 		element.className = 'demo';
@@ -612,16 +610,22 @@ for (const demo of ['index.html', 'esm.html', 'unpkg.html']) {
 			const pairs = page.locator('.code-demo-pair');
 			expect(await pairs.count()).toBeGreaterThan(0);
 			for (const pair of await pairs.all()) {
-				const code = await pair
-					.locator(':scope > micro-lighter')
-					.boundingBox();
-				const live = await pair.locator('.demo').boundingBox();
-				expect(code).not.toBeNull();
-				expect(live).not.toBeNull();
-				if (width === 1280) {
-					expect(code.x + code.width).toBeLessThanOrEqual(live.x);
-					expect(Math.abs(code.y - live.y)).toBeLessThan(2);
-				} else expect(code.y + code.height).toBeLessThanOrEqual(live.y);
+				await expect
+					.poll(() =>
+						pair.evaluate((element) => {
+							const code = element
+								.querySelector(':scope > micro-lighter')
+								.getBoundingClientRect();
+							const live = element
+								.querySelector(':scope > .demo')
+								.getBoundingClientRect();
+							return innerWidth === 1280
+								? code.right <= live.left &&
+										Math.abs(code.top - live.top) < 2
+								: code.bottom <= live.top;
+						}),
+					)
+					.toBe(true);
 			}
 		}
 		for (const field of await page.locator('input:visible').all()) {
@@ -642,8 +646,7 @@ for (const demo of ['index.html', 'esm.html', 'unpkg.html']) {
 				.locator('.validation-matched'),
 		).toHaveCount(3);
 		await expect(firstField).toBeFocused();
-		await expect(firstField).toHaveCSS('outline-style', 'solid');
-		await expect(firstField).toHaveCSS('outline-width', '3px');
+		await expectNativeFocus(firstField);
 		if (demo === 'index.html') {
 			await page.locator('#email').fill('a@b.co');
 			const icons = page.locator(

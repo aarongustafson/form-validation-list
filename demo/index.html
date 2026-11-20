@@ -4,38 +4,14 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Validation List Web Component Demo</title>
-		<link rel="stylesheet" href="./styles.css" />
 		<link rel="stylesheet" href="./demo-shell.css" />
-		<style>
-			/* Component-specific validation styles */
-			form-validation-list ul {
-				list-style: none;
-				padding-left: 0;
-			}
-
-			form-validation-list li {
-				padding: 0.25rem 0;
-			}
-
-			/* Custom styling example */
-			.custom-styled {
-				display: block;
-				--rule-matched-icon: '✔';
-				--rule-unmatched-icon: '✘';
-				--rule-icon-size: 1.2em;
-				--rule-matched-color: #17652e;
-				--rule-unmatched-color: #982b39;
-				background: #fff;
-				color: #202020;
-			}
-
-			.custom-styled ul {
-				padding: 1rem;
-				border-radius: 4px;
-			}
-		</style>
+		<link rel="stylesheet" href="./styles.css" />
 	</head>
-	<body data-syntax-theme="github">
+	<body
+		data-demo-example="main"
+		data-demo-page="full"
+		data-syntax-theme="github"
+	>
 		<a class="skip-link" href="#main">Skip to examples</a>
 		<header>
 			<p class="eyebrow">Web component / Examples</p>
@@ -62,6 +38,9 @@
 		<main id="main" tabindex="-1">
 			<p
 				id="microlighter-status"
+				data-loading-message="Loading optional code highlighting and Copy controls."
+				data-failure-message="MicroLighter could not load. Code remains readable and selectable; the component loads independently."
+				data-theme-failure-message="Code highlighting and Copy controls are available, but the syntax theme could not load. The component loads independently."
 				class="enhancement-status"
 				role="status"
 				hidden
@@ -111,7 +90,7 @@
   &lt;button type="submit"&gt;Submit&lt;/button&gt;
 &lt;/form&gt;</code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Live example">
 							<form id="form1">
 								<label for="username">Username:</label>
 								<input
@@ -188,7 +167,7 @@
   &lt;button type="submit"&gt;Submit&lt;/button&gt;
 &lt;/form&gt;</code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Live example">
 							<form id="form2">
 								<label for="password">Password:</label>
 								<input
@@ -283,7 +262,7 @@
   &lt;button type="submit"&gt;Submit&lt;/button&gt;
 &lt;/form&gt;</code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Live example">
 							<form id="form3">
 								<label for="email">Email:</label>
 								<input
@@ -359,7 +338,7 @@
   &lt;/ul&gt;
 <mark>&lt;/form-validation-list&gt;</mark></code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Live example">
 							<form>
 								<label for="custom-trigger"
 									>Try me (blur to validate):</label
@@ -433,7 +412,7 @@
   &lt;/ul&gt;
 <mark>&lt;/form-validation-list&gt;</mark></code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Live example">
 							<style>
 								input.is-valid {
 									border-color: FieldText;
@@ -531,7 +510,7 @@
   console.log('Current state:', validationList.isValid);
 &lt;/script&gt;</code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Live example">
 							<form id="form4">
 								<label for="api-field">Test Field:</label>
 								<input
@@ -624,7 +603,7 @@
   &lt;button type="submit"&gt;Enviar&lt;/button&gt;
 &lt;/form&gt;</code></pre>
 						</micro-lighter>
-						<div class="demo">
+						<div class="demo" data-demo-label="Ejemplo interactivo">
 							<form id="form5" lang="es">
 								<label for="contrasena">Contraseña:</label>
 								<input
