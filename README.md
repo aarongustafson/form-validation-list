@@ -13,23 +13,6 @@ built-in form validation. Without JavaScript, the authored fields and
 requirements remain visible, but these extra rules are not enforced. Always
 validate submitted values on the server.
 
-## Features
-
-- **Light DOM** - Uses light DOM for better accessibility and SEO
-- **Pattern-based validation** - Define rules using regular expressions
-- **Accessible** - Single live summary while typing, with full criteria state restored on blur
-- **Customizable** - Configure classes, icons, and localized rule state strings
-- **Browser validation integration** - Participates in native form validation using `setCustomValidity`
-- **Event-driven** - Fires custom events for programmatic interaction
-- **Visual feedback** - Animated cascade effect when validating rules
-
-## TypeScript & Framework Support
-
-- Ships with bundled `.d.ts` definitions so editors and TypeScript builds understand `FormValidationListElement` and `defineFormValidationList`.
-- `for`, `trigger-event`, `input-throttle`, `each-delay`, the icon/state text attributes, and every class-related attribute reflect between properties and attributes, keeping reactive frameworks and declarative templates in sync with DOM state.
-- An internal `_upgradeProperty` helper captures properties that were assigned before the element upgraded, ensuring early property sets (common in SSR or JSX) are not lost.
-- The `HTMLElementTagNameMap` is augmented so `document.querySelector('form-validation-list')` is strongly typed in TS/JSX projects.
-
 ## Demo
 
 [Live Demo](https://aarongustafson.github.io/form-validation-list/demo/) ([Source](./demo/index.html))
@@ -38,6 +21,7 @@ Additional examples:
 
 - [ESM CDN (esm.sh)](https://aarongustafson.github.io/form-validation-list/demo/esm.html) ([Source](./demo/esm.html))
 - [unpkg CDN](https://aarongustafson.github.io/form-validation-list/demo/unpkg.html) ([Source](./demo/unpkg.html))
+- [Blur timing](https://aarongustafson.github.io/form-validation-list/demo/#validate-on-blur), [Spanish messages](https://aarongustafson.github.io/form-validation-list/demo/#spanish-validation-messages), and [custom styling](https://aarongustafson.github.io/form-validation-list/demo/#custom-icons-and-colors) ([Source](./demo/index.html))
 
 ## Installation
 
@@ -101,6 +85,14 @@ You can also include the guarded script from HTML:
 </form>
 ```
 
+The native `required` attribute rejects an empty username. After registration,
+the component adds the three regex checks through
+[`setCustomValidity()`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/setCustomValidity).
+Matching these illustrative rules doesn’t establish that a username is available
+or a password is strong. The password and email patterns in the demos aren’t
+comprehensive validation; choose requirements for your application and check
+submitted values on the server.
+
 ## How It Works
 
 ### Validation Flow
@@ -108,26 +100,55 @@ You can also include the guarded script from HTML:
 1. Add a `for` attribute to the `<form-validation-list>` element with the ID of the input field you want to validate
 2. Inside the element, add list items (or any elements) with a `data-pattern` attribute containing a regular expression
 3. Matched rules get the `validation-matched` class and show a checkmark; unmatched rules get `validation-unmatched` and show an X
-4. Once the field has a value, each rule also includes visually hidden localized state text such as "Criteria met" or "Criteria not met"
-5. The component uses `setCustomValidity()` to participate in the browser's form validation
+4. Once the field has a value, each rule also includes visually hidden localized state text such as “Criteria met” or “Criteria not met”
+5. The component sets a custom validity message when any rule is unmatched and clears it when all rules match. Native constraints such as `required`, `type`, and `pattern` still apply.
+
+The component checks an existing value on connection. For an initially empty
+field, it waits for an event or `validate()` before classifying rules. Rule
+counts and custom validity update before the optional visual cascade finishes.
+
+### Setup and cleanup
+
+Use `for` to reference an existing field in the document. A missing `for`
+leaves the element inactive; an unresolved field ID or an empty rule set logs
+a warning and does not attach validation listeners. Correct `for` after the
+field exists, or reconnect the element, to set it up again.
+
+Rules must contain valid JavaScript regular expressions. The component calls
+`new RegExp()` without flags, and an invalid expression throws during setup.
+It captures rules at setup; editing `data-pattern` later does not update the
+compiled regex until setup runs again. Match anywhere by default; use `^` and
+`$` when the whole value must match. Keep patterns trusted and bounded:
+expensive regexes can block the browser’s main thread.
+
+Changing `for` or disconnecting clears timers and listeners, removes this
+component’s description reference, field/rule classes, live region, and custom
+validity. Other description IDs remain. Authored requirements, generated list
+IDs, and icon/state spans remain in the DOM, including their last hidden state
+text. Don’t share control of the field’s
+custom validity with another validator without coordinating those updates.
 
 ### Trigger Event Behavior
 
 #### With `trigger-event="input"` (default)
 
-- Validation runs on input events with a configurable delay (see `input-throttle`)
-- While typing, the field temporarily stops referencing the full criteria list via `aria-describedby` to avoid duplicate announcements
-- A single polite live region announces the localized summary using the `announcement` template
+- Validation runs after the configured delay from the most recent input event (see `input-throttle`)
+- While typing, the component removes only its own reference from the field’s `aria-describedby`; other descriptions and the visible list remain
+- A polite, atomic live region receives the localized summary using the `announcement` template
 - When the user blurs (leaves) the field:
-  - Any pending validation timeouts are cleared to prevent cascading updates
-  - The field's `aria-describedby` is restored after a brief delay so returning to the field reads the full criteria state again
+  - Pending input and rule timers are cleared, then a final validation pass runs and clears the live summary
+  - That pass can schedule new per-rule timers using `each-delay`
+  - The component restores its description reference after 200 milliseconds; resumed typing cancels pending restoration
 
 #### With `trigger-event="blur"`
 
 - Validation runs immediately (without throttling) when the user leaves the field
 - The `input-throttle` attribute is ignored
-- No aria-describedby suspension occurs, so the full criteria list remains visible while typing
-- No live region announcements occur during typing
+- No `aria-describedby` suspension occurs; the list remains associated with the field
+- The live summary stays empty during typing and blur validation
+
+The component does not move focus. These DOM updates supply descriptions and
+live-region semantics, not a guarantee about what any screen reader will say.
 
 ## Attributes
 
@@ -170,53 +191,6 @@ You can also include the guarded script from HTML:
 </form-validation-list>
 ```
 
-## Generated Markup
-
-The component automatically enhances your markup with additional elements and IDs:
-
-**Your HTML:**
-
-```html
-<form-validation-list for="password">
-  <ul>
-    <li data-pattern=".{8,}">At least 8 characters</li>
-  </ul>
-</form-validation-list>
-```
-
-**Generated DOM (simplified):**
-
-```html
-<form-validation-list for="password">
-  <ul id="form-validation-list-abc123xyz">
-    <li data-pattern=".{8,}" class="validation-unmatched" aria-atomic="true">
-      <span class="form-validation-list-rule-icon" aria-hidden="true"></span>
-      <span class="form-validation-list-rule-state">Criteria not met </span>
-      At least 8 characters
-    </li>
-  </ul>
-  <span
-    aria-live="polite"
-    aria-atomic="true"
-    class="form-validation-list-live-region"
-  ></span>
-</form-validation-list>
-```
-
-**What gets added:**
-
-- **List ID**: A unique ID is assigned to your `<ul>` or `<ol>` element and linked to the input via `aria-describedby`
-- **Rule icon span**: A `<span class="form-validation-list-rule-icon">` is prepended to each rule showing ✓ or ✗
-  - `aria-hidden="true"` prevents screen readers from announcing the icon
-  - Content controlled via the `rule-matched-icon` and `rule-unmatched-icon` attributes or the `--rule-matched-icon` and `--rule-unmatched-icon` CSS properties
-- **Rule state span**: A `<span class="form-validation-list-rule-state">` is inserted after the icon with visually hidden state text
-  - Hidden with `clip: rect(0 0 0 0)` and `position: absolute`
-  - Contains localized state text (default: “Criteria met ” or “Criteria not met ”, configurable via `rule-matched-alt` and `rule-unmatched-alt` attributes)
-  - Only populated when the field has a value (`.has-value` class on the component)
-- **Live region**: A `<span class="form-validation-list-live-region">` with `aria-live="polite"` is added as a sibling to your list
-  - Only updated while typing with `trigger-event="input"`
-  - Cleared on blur and during programmatic validation
-
 ## Validation Rules
 
 Rules are defined using the `data-pattern` attribute on any element inside the `<form-validation-list>`. The value should be a valid regular expression pattern.
@@ -228,7 +202,7 @@ Rules are defined using the `data-pattern` attribute on any element inside the `
   <ul>
     <!-- Length requirements -->
     <li data-pattern=".{8,}">At least 8 characters</li>
-    <li data-pattern=".{8,32}">Between 8 and 32 characters</li>
+    <li data-pattern="^.{8,32}$">Between 8 and 32 characters</li>
 
     <!-- Character type requirements -->
     <li data-pattern="[A-Z]+">At least one uppercase letter</li>
@@ -237,7 +211,7 @@ Rules are defined using the `data-pattern` attribute on any element inside the `
     <li data-pattern="[!@#$%^&*]+">At least one special character</li>
 
     <!-- Format requirements -->
-    <li data-pattern=".+@.+\..+">Valid email format</li>
+    <li data-pattern=".+@.+\..+">Contains @ followed by a dot</li>
     <li data-pattern="^[a-zA-Z0-9]+$">Only letters and numbers</li>
   </ul>
 </form-validation-list>
@@ -245,7 +219,8 @@ Rules are defined using the `data-pattern` attribute on any element inside the `
 
 ## Events
 
-The component fires a custom event when validation completes:
+The component fires a bubbling, composed custom event after updating rule
+counts and field validity, before delayed rule presentation necessarily finishes.
 
 | Event                            | Description                      | Detail                                         |
 | -------------------------------- | -------------------------------- | ---------------------------------------------- |
@@ -269,7 +244,9 @@ validationList.addEventListener('form-validation-list:validated', (event) => {
 
 #### `validate()`
 
-Manually trigger validation and return the current validation state.
+Check the field’s current value and return whether all regex rules match.
+This does not call `reportValidity()` or submit the form. It does not include
+native constraints such as `required` in its return value.
 
 ```javascript
 const validationList = document.querySelector('form-validation-list');
@@ -281,12 +258,39 @@ console.log('Is valid:', isValid);
 
 #### `isValid` (getter)
 
-Returns the current validation state as a boolean.
+Returns whether all rules matched at the last validation pass, not the field’s
+full native validity. Assigning `field.value` does not dispatch an input event;
+call `validate()` to check a programmatic change. Manual validation updates the
+live summary if typing has already suspended the description reference;
+otherwise the summary stays empty.
 
 ```javascript
 const validationList = document.querySelector('form-validation-list');
 console.log('Current state:', validationList.isValid);
 ```
+
+### Reflected properties and TypeScript
+
+The package includes declarations for `FormValidationListElement`,
+`defineFormValidationList`, and `HTMLElementTagNameMap`. It preserves public
+properties assigned before the element upgrades.
+
+| Attribute                                    | Property                                 |
+| -------------------------------------------- | ---------------------------------------- |
+| `for`                                        | `for`, `fieldId`                         |
+| `trigger-event`                              | `triggerEvent`                           |
+| `input-throttle`, `each-delay`               | `inputThrottle`, `eachDelay`             |
+| `field-invalid-class`, `field-valid-class`   | `fieldInvalidClass`, `fieldValidClass`   |
+| `rule-unmatched-class`, `rule-matched-class` | `ruleUnmatchedClass`, `ruleMatchedClass` |
+| `rule-matched-icon`, `rule-unmatched-icon`   | `ruleMatchedIcon`, `ruleUnmatchedIcon`   |
+| `rule-matched-alt`, `rule-unmatched-alt`     | `ruleMatchedAlt`, `ruleUnmatchedAlt`     |
+| `announcement`, `validation-message`         | `announcement`, `validationMessage`      |
+
+These properties reflect to attributes. Unsupported trigger values normalize
+to `input`. Timing values must be finite, nonnegative numbers; invalid values
+use their defaults. Class attributes accept one class token each, not a
+space-separated list. See the [declarations](./form-validation-list.d.ts) and
+[source](./form-validation-list.js) for the full interface.
 
 ## CSS Custom Properties
 
@@ -345,7 +349,7 @@ Both custom icon colors above exceed 4.5:1 on the explicit white background.
 The authored `display: block` keeps that background behind the list even if
 JavaScript is disabled or the module cannot load.
 Monochrome glyphs follow the color hooks; color emoji may not. See the
-[custom-color demo](./demo/index.html) for the code and working example.
+[custom-color demo](./demo/index.html#custom-icons-and-colors) for the code and working example.
 
 ## Internationalization
 
@@ -353,11 +357,21 @@ The component exposes separate templates for browser validation messages, live t
 
 - `validation-message` supports `{matched}` and `{total}` placeholders for native form validation.
 - `announcement` supports `{matched}` and `{total}` placeholders for the live region summary while typing.
-- `rule-matched-alt` and `rule-unmatched-alt` provide localized rule state text when the field is revisited.
+- `rule-matched-alt` and `rule-unmatched-alt` provide hidden rule state text once the field has a value.
+
+Use these attributes for application vocabulary as well as translation.
+Set all four on each instance; the component has no shared translation object
+and does not choose strings from `lang`. Translate authored labels and rule
+text too, and set the appropriate language on their containing element.
+Attributes override the defaults independently. Empty state or announcement
+attributes suppress that text; an empty `validation-message` uses the default
+message. Setting an empty string through a message property removes the
+attribute and restores its default.
 
 ```html
 <!-- Spanish -->
 <form-validation-list
+  lang="es"
   for="contrasena"
   announcement="{matched} de {total} criterios cumplidos"
   rule-matched-alt="Criterio cumplido"
@@ -373,6 +387,7 @@ The component exposes separate templates for browser validation messages, live t
 
 <!-- French -->
 <form-validation-list
+  lang="fr"
   for="mot-de-passe"
   announcement="{matched} critères satisfaits sur {total}"
   rule-matched-alt="Critère satisfait"
@@ -397,34 +412,10 @@ recovery. Automated tests do not establish conformance or guarantee a particular
 screen reader’s announcements.
 
 - **Native List Semantics**: The component preserves the semantics of your existing `ul`/`li` markup
-- **Smart Live Region**: A dedicated polite, atomic live region announces the localized summary only while the user types with `trigger-event="input"`, keeping screen reader chatter minimal
-- **ARIA Described-by Management**: The validation list is automatically associated with the input field via `aria-describedby`. With `trigger-event="input"`, the list is temporarily suspended while typing to avoid duplicate announcements, then restored on blur. With `trigger-event="blur"`, the list remains visible at all times.
-- **Timeout Cleanup**: Pending validation timeouts are cleared on blur to prevent cascading updates after focus leaves the field
-- **Localized Rule State**: Each rule gets visually hidden state text in the DOM once the field has a value, which works better with translation tooling than CSS-only alternative text
+- **Descriptions**: The component associates the first `ul` or `ol` with the field through `aria-describedby`, using the component itself if no list exists.
+- **Rule states**: Each rule gets a decorative icon with `aria-hidden="true"` and visually hidden localized text once the field has a value.
+- **Typing summaries**: A polite, atomic live region supplies rule counts while the description reference is suspended. See [trigger event behavior](#trigger-event-behavior) for timing and blur updates.
 - **Existing Descriptions**: If the field already has an `aria-describedby` attribute, the component preserves existing values and appends its own ID
-
-### Screen Reader Experience
-
-#### With `trigger-event="input"` (recommended for complex validation)
-
-When a user focuses on the input field, screen readers announce the field label followed by the validation requirements. While the user types:
-
-- The full validation list is temporarily hidden from the screen reader via aria-describedby suspension
-- A concise live announcement summarizes progress using the `announcement` template (e.g., "Criteria met: 2 of 3")
-- This prevents overwhelming screen reader users with repetitive rule announcements on every keystroke
-
-On blur (when leaving the field):
-
-- Pending validations are cancelled to prevent stale updates
-- The field's `aria-describedby` is restored after a brief delay
-- Returning to the field will announce the final criteria state
-
-#### With `trigger-event="blur"` (for simple or expensive validation)
-
-- The full validation requirements remain visible via `aria-describedby` at all times
-- Validation only occurs when leaving the field
-- Validation happens immediately without throttling
-- Screen readers will read the full criteria only once on focus, then again on return if changes occurred
 
 ## Browser Validation Integration
 
@@ -432,20 +423,22 @@ The component participates in the browser's native form validation using the `se
 
 - When all rules are matched, the custom validity is cleared (`setCustomValidity('')`)
 - When any rule is unmatched, a custom validity message is set
-- This prevents form submission until all validation rules are met
-- Works seamlessly with the `:valid` and `:invalid` CSS pseudo-classes
-- Compatible with the Constraint Validation API
+- Native constraint validation can block submission while the custom message is set; `novalidate` and direct `form.submit()` bypass interactive validation
+- `:valid`, `:invalid`, and the Constraint Validation API include that custom validity alongside native constraints
+
+Before checking or submitting a programmatically changed value, call
+`validate()`. Native checks cannot run additional regex rules before the
+component initializes. Keep server checks even when the browser reports success.
 
 ```javascript
 const form = document.querySelector('form');
 const field = document.getElementById('username');
+const validationList = document.querySelector('form-validation-list');
 
-form.addEventListener('submit', (e) => {
-  if (!form.checkValidity()) {
-    e.preventDefault();
-    console.log('Validation failed:', field.validationMessage);
-  }
-});
+// After assigning a value programmatically:
+validationList.validate();
+console.log('Browser validity:', form.checkValidity());
+console.log('Validation message:', field.validationMessage);
 ```
 
 ## Browser Support
@@ -456,7 +449,12 @@ This component uses modern web standards:
 - ES Modules
 - CSS Custom Properties
 
-For older browsers, you may need polyfills.
+Without these features or if the module fails to load, the native fields and
+authored requirements remain usable, but the additional rules are not enforced.
+The guarded helper avoids duplicate registration and returns `false` if no
+browser registry is available. Its imported class still needs `HTMLElement`
+when the module evaluates; the guard is not a server-side rendering shim.
+Node.js 22 or later is required for package development.
 
 ## Migrating from jQuery Easy Validation Rules
 

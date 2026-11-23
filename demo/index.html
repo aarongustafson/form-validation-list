@@ -17,8 +17,8 @@
 			<p class="eyebrow">Web component / Examples</p>
 			<h1>&lt;form-validation-list&gt;</h1>
 			<p class="lede">
-				A web component comprising a list of validation rules for a
-				field. See the
+				Check a field against a visible list of regular expression
+				requirements. See the
 				<a href="../">README</a>
 				for installation and API documentation.
 			</p>
@@ -52,14 +52,22 @@
 				value, localized hidden text also identifies each rule’s state.
 				Without JavaScript, the fields and requirements remain visible,
 				but these extra rules are not enforced. Always validate
-				submitted values on the server.
+				submitted values on the server. Native
+				<code>required</code> checks still apply. These illustrative
+				patterns aren’t comprehensive password or email validation, and
+				matching them doesn’t establish password strength.
 			</p>
 			<!-- Basic Example -->
-			<section>
-				<h2>Basic Password Validation</h2>
-				<p>A password field with multiple validation requirements.</p>
+			<section id="basic-validation">
+				<h2>Check a username while typing</h2>
+				<p>
+					The default input delay is 250 milliseconds after the last
+					input event. The list supplies a description for the field
+					alongside any existing descriptions; its polite live region
+					summarizes the number of matching rules while typing.
+				</p>
 
-				<div class="demo-section">
+				<div class="demo-section" id="username-requirements">
 					<h3>Username Validation</h3>
 					<p>
 						This example validates a username with capital letters,
@@ -118,7 +126,7 @@
 								<div
 									id="message1"
 									class="validation-message"
-									style="display: none"
+									role="status"
 								></div>
 							</form>
 						</div>
@@ -127,15 +135,15 @@
 			</section>
 
 			<!-- Password Example -->
-			<section>
-				<h2>Strong Password Requirements</h2>
+			<section id="password-validation">
+				<h2>Check password requirements</h2>
 				<p>
 					A more complex validation with length and special character
 					requirements.
 				</p>
 
-				<div class="demo-section">
-					<h3>Password Strength Validation</h3>
+				<div class="demo-section" id="password-requirements">
+					<h3>Match length and character rules</h3>
 					<p>
 						Demonstrates multiple password requirements including
 						length and special characters.
@@ -148,7 +156,7 @@
 							data-label="HTML"
 						>
 							<pre
-								aria-label="Password Strength Validation code 2"
+								aria-label="Password requirements code"
 								tabindex="0"
 							><code>&lt;form&gt;
   &lt;label for="password"&gt;Password:&lt;/label&gt;
@@ -202,98 +210,7 @@
 								<div
 									id="message2"
 									class="validation-message"
-									style="display: none"
-								></div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			<!-- Custom Styling Example -->
-			<section>
-				<h2>Custom Styling with CSS Custom Properties</h2>
-				<p>Customize the appearance using CSS custom properties.</p>
-
-				<div class="demo-section">
-					<h3>Custom Icons and Colors</h3>
-					<p>
-						This example uses monochrome glyphs and green/red icon
-						colors on an explicit white surface. Both colors have at
-						least 4.5:1 contrast against that surface. The check and
-						cross still distinguish states without color. Automatic
-						forced-color adjustment remains enabled.
-					</p>
-					<div class="code-demo-pair">
-						<micro-lighter
-							class="code-panel"
-							language="html"
-							controls="copy"
-							data-label="HTML"
-						>
-							<pre
-								aria-label="Custom Icons and Colors code 3"
-								tabindex="0"
-							><code>&lt;style&gt;
-  .custom-styled {
-    display: block;
-    --rule-matched-icon: "✔";
-    --rule-unmatched-icon: "✘";
-    --rule-icon-size: 1.2em;
-    --rule-matched-color: #17652e;
-    --rule-unmatched-color: #982b39;
-    background: #fff;
-    color: #202020;
-  }
-&lt;/style&gt;
-
-&lt;form&gt;
-  &lt;label for="email"&gt;Email:&lt;/label&gt;
-  &lt;input type="text" id="email" name="email" required&gt;
-
-  <mark>&lt;form-validation-list for="email" class="custom-styled"&gt;</mark>
-    &lt;ul&gt;
-      &lt;li data-pattern=".+@.+"&gt;Contains @ symbol&lt;/li&gt;
-      &lt;li data-pattern=".+@.+\..+"&gt;Valid email format&lt;/li&gt;
-      &lt;li data-pattern=".{6,}"&gt;At least 6 characters&lt;/li&gt;
-    &lt;/ul&gt;
-  <mark>&lt;/form-validation-list&gt;</mark>
-
-  &lt;button type="submit"&gt;Submit&lt;/button&gt;
-&lt;/form&gt;</code></pre>
-						</micro-lighter>
-						<div class="demo" data-demo-label="Live example">
-							<form id="form3">
-								<label for="email">Email:</label>
-								<input
-									type="text"
-									id="email"
-									name="email"
-									required
-								/>
-
-								<form-validation-list
-									for="email"
-									class="custom-styled"
-								>
-									<ul>
-										<li data-pattern=".+@.+">
-											Contains @ symbol
-										</li>
-										<li data-pattern=".+@.+\..+">
-											Valid email format
-										</li>
-										<li data-pattern=".{6,}">
-											At least 6 characters
-										</li>
-									</ul>
-								</form-validation-list>
-
-								<button type="submit">Submit</button>
-								<div
-									id="message3"
-									class="validation-message"
-									style="display: none"
+									role="status"
 								></div>
 							</form>
 						</div>
@@ -302,20 +219,26 @@
 			</section>
 
 			<!-- Customization Example -->
-			<section>
-				<h2>Customization Options</h2>
+			<section id="validation-timing">
+				<h2>Choose when to validate</h2>
 				<p>
-					The component provides several attributes to customize its
-					behavior and styling.
+					Validate on leaving a field instead of after input events.
+					The list stays associated with the field while typing.
 				</p>
 
-				<div class="demo-section">
-					<h3>Custom Trigger Event and Delay</h3>
+				<div class="demo-section" id="validate-on-blur">
+					<h3>Validate when the field loses focus</h3>
 					<p>
 						Use <code>trigger-event="blur"</code> to validate only
 						when the field loses focus, and
 						<code>each-delay="0"</code> to remove the cascade
-						animation.
+						animation. Type <code>Ab1</code>, then press Tab to
+						leave the field. The component updates custom validity
+						immediately on blur. See the
+						<a href="../README.md#trigger-event-behavior"
+							>timing reference</a
+						>
+						for typing summaries and description restoration.
 					</p>
 					<div class="code-demo-pair">
 						<micro-lighter
@@ -327,7 +250,9 @@
 							<pre
 								aria-label="Custom Trigger Event and Delay code 4"
 								tabindex="0"
-							><code><mark>&lt;form-validation-list
+							><code>&lt;label for="custom-trigger"&gt;Try me (blur to validate):&lt;/label&gt;
+&lt;input type="text" id="custom-trigger" name="custom-trigger" required&gt;
+<mark>&lt;form-validation-list
   for="custom-trigger"
   trigger-event="blur"
   each-delay="0"&gt;</mark>
@@ -376,8 +301,314 @@
 						</div>
 					</div>
 				</div>
+			</section>
 
-				<div class="demo-section">
+			<!-- Event Listener Example -->
+			<section id="manual-validation">
+				<h2>Check requirements with a button</h2>
+				<p>
+					Use <code>validate()</code> to check an assigned value
+					before a blur event. This example reports rule counts from
+					<code>form-validation-list:validated</code>, then checks
+					browser validity, which includes the native
+					<code>required</code> constraint and the component’s custom
+					validity.
+				</p>
+
+				<div class="demo-section" id="check-requirements-button">
+					<h3>Report matching rules and browser validity</h3>
+					<p>
+						Enter <code>abc</code> for two matching rules or
+						<code>1</code> for none, then activate “Check
+						requirements.” An empty field also fails the native
+						<code>required</code> check. The result doesn’t move
+						focus.
+					</p>
+					<div class="code-demo-pair">
+						<micro-lighter
+							class="code-panel"
+							language="html"
+							controls="copy"
+							data-label="HTML"
+						>
+							<pre
+								aria-label="Check requirements button code"
+								tabindex="0"
+							><code>&lt;form id="form4"&gt;
+&lt;label for="api-field"&gt;Test Field:&lt;/label&gt;
+&lt;input type="text" id="api-field" name="api-field" required&gt;
+<mark>&lt;form-validation-list for="api-field" id="api-validation"
+  trigger-event="blur" each-delay="0"&gt;</mark>
+  &lt;ul&gt;
+    &lt;li data-pattern="^[a-zA-Z]+$"&gt;Only letters&lt;/li&gt;
+    &lt;li data-pattern=".{3,}"&gt;At least 3 characters&lt;/li&gt;
+  &lt;/ul&gt;
+<mark>&lt;/form-validation-list&gt;</mark>
+&lt;button type="button" id="check-validity"&gt;Check requirements&lt;/button&gt;
+&lt;div id="message4" role="status"&gt;&lt;/div&gt;
+&lt;/form&gt;
+
+&lt;script type="module"&gt;
+  <mark>import '../define.js';</mark>
+  const validationList = document.getElementById('api-validation');
+  const field = document.getElementById('api-field');
+  const result = document.getElementById('message4');
+  <mark>validationList.addEventListener('form-validation-list:validated', (event) =&gt; {
+    const { matchedRules, totalRules } = event.detail;</mark>
+    result.textContent = `${matchedRules} of ${totalRules} requirements matched. Browser validity: ${field.checkValidity() ? 'valid' : 'invalid'}.`;
+  });
+  document.getElementById('check-validity').addEventListener('click', () =&gt; {
+    <mark>validationList.validate();</mark>
+  });
+  // Keep this demonstration on the page, including implicit submission.
+  document.getElementById('form4').addEventListener('submit', (event) =&gt; {
+    event.preventDefault();
+  });
+&lt;/script&gt;</code></pre>
+						</micro-lighter>
+						<div class="demo" data-demo-label="Live example">
+							<form id="form4">
+								<label for="api-field">Test Field:</label>
+								<input
+									type="text"
+									id="api-field"
+									name="api-field"
+									required
+								/>
+
+								<form-validation-list
+									for="api-field"
+									id="api-validation"
+									trigger-event="blur"
+									each-delay="0"
+								>
+									<ul>
+										<li data-pattern="^[a-zA-Z]+$">
+											Only letters
+										</li>
+										<li data-pattern=".{3,}">
+											At least 3 characters
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="button" id="check-validity">
+									Check requirements
+								</button>
+								<div
+									id="message4"
+									class="validation-message"
+									role="status"
+								></div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Internationalization Example -->
+			<section id="localization">
+				<h2>Use your application’s vocabulary or another language</h2>
+				<p>
+					Set individual message attributes to use words such as
+					“requirements” instead of “criteria.” The same attributes
+					translate the custom validation message, typing summary, and
+					hidden rule states. There’s no shared translation object;
+					set all four attributes on each instance.
+				</p>
+
+				<div class="demo-section" id="spanish-validation-messages">
+					<h3>Spanish Validation Messages</h3>
+					<p>
+						This form uses Spanish labels, rules, and messages.
+						<code>lang="es"</code> identifies its language,
+						including the generated text. See the
+						<a href="../README.md#internationalization"
+							>message reference</a
+						>.
+					</p>
+					<div class="code-demo-pair">
+						<micro-lighter
+							class="code-panel"
+							language="html"
+							controls="copy"
+							data-label="HTML"
+						>
+							<pre
+								aria-label="Spanish Validation Messages code 7"
+								tabindex="0"
+							><code>&lt;form lang="es"&gt;
+  &lt;label for="contrasena"&gt;Contraseña:&lt;/label&gt;
+  &lt;input
+    type="password"
+    id="contrasena"
+    name="contrasena"
+    required&gt;
+
+  <mark>&lt;form-validation-list
+    for="contrasena"
+    announcement="{matched} de {total} criterios cumplidos"
+    rule-matched-alt="Criterio cumplido"
+    rule-unmatched-alt="Criterio pendiente"
+    validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"&gt;</mark>
+    &lt;ul&gt;
+      &lt;li data-pattern="[A-Z]+"&gt;Al menos una letra mayúscula&lt;/li&gt;
+      &lt;li data-pattern="[a-z]+"&gt;Al menos una letra minúscula&lt;/li&gt;
+      &lt;li data-pattern="[\d]+"&gt;Al menos un número&lt;/li&gt;
+      &lt;li data-pattern="[!@#$%^&amp;*]+"&gt;Al menos un carácter especial (!@#$%^&amp;*)&lt;/li&gt;
+      &lt;li data-pattern=".{8,}"&gt;Al menos 8 caracteres&lt;/li&gt;
+    &lt;/ul&gt;
+  <mark>&lt;/form-validation-list&gt;</mark>
+
+  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+						</micro-lighter>
+						<div
+							class="demo"
+							data-demo-label="Ejemplo interactivo"
+							lang="es"
+						>
+							<form id="form5" lang="es">
+								<label for="contrasena">Contraseña:</label>
+								<input
+									type="password"
+									id="contrasena"
+									name="contrasena"
+									required
+								/>
+
+								<form-validation-list
+									for="contrasena"
+									announcement="{matched} de {total} criterios cumplidos"
+									rule-matched-alt="Criterio cumplido"
+									rule-unmatched-alt="Criterio pendiente"
+									validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"
+								>
+									<ul>
+										<li data-pattern="[A-Z]+">
+											Al menos una letra mayúscula
+										</li>
+										<li data-pattern="[a-z]+">
+											Al menos una letra minúscula
+										</li>
+										<li data-pattern="[\d]+">
+											Al menos un número
+										</li>
+										<li data-pattern="[!@#$%^&*]+">
+											Al menos un carácter especial
+											(!@#$%^&*)
+										</li>
+										<li data-pattern=".{8,}">
+											Al menos 8 caracteres
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="submit">Enviar</button>
+								<div
+									id="message5"
+									class="validation-message"
+									role="status"
+								></div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
+			<!-- Custom Styling Example -->
+			<section id="custom-styling">
+				<h2>Custom Styling with CSS Custom Properties</h2>
+				<p>Customize the appearance using CSS custom properties.</p>
+
+				<div class="demo-section" id="custom-icons-and-colors">
+					<h3>Custom Icons and Colors</h3>
+					<p>
+						This example uses monochrome glyphs and green/red icon
+						colors on an explicit white surface. Both colors have at
+						least 4.5:1 contrast against that surface. The check and
+						cross still distinguish states without color. Automatic
+						forced-color adjustment remains enabled.
+					</p>
+					<div class="code-demo-pair">
+						<micro-lighter
+							class="code-panel"
+							language="html"
+							controls="copy"
+							data-label="HTML"
+						>
+							<pre
+								aria-label="Custom Icons and Colors code 3"
+								tabindex="0"
+							><code>&lt;style&gt;
+  .custom-styled {
+    display: block;
+    --rule-matched-icon: "✔";
+    --rule-unmatched-icon: "✘";
+    --rule-icon-size: 1.2em;
+    --rule-matched-color: #17652e;
+    --rule-unmatched-color: #982b39;
+    background: #fff;
+    color: #202020;
+  }
+&lt;/style&gt;
+
+&lt;form&gt;
+  &lt;label for="email"&gt;Email:&lt;/label&gt;
+  &lt;input type="text" id="email" name="email" required&gt;
+
+  <mark>&lt;form-validation-list for="email" class="custom-styled"&gt;</mark>
+    &lt;ul&gt;
+      &lt;li data-pattern=".+@.+"&gt;Contains @ symbol&lt;/li&gt;
+      &lt;li data-pattern=".+@.+\..+"&gt;Contains @ followed by a dot&lt;/li&gt;
+      &lt;li data-pattern=".{6,}"&gt;At least 6 characters&lt;/li&gt;
+    &lt;/ul&gt;
+  <mark>&lt;/form-validation-list&gt;</mark>
+
+  &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+						</micro-lighter>
+						<div class="demo" data-demo-label="Live example">
+							<form id="form3">
+								<label for="email">Email:</label>
+								<input
+									type="text"
+									id="email"
+									name="email"
+									required
+								/>
+
+								<form-validation-list
+									for="email"
+									class="custom-styled"
+								>
+									<ul>
+										<li data-pattern=".+@.+">
+											Contains @ symbol
+										</li>
+										<li data-pattern=".+@.+\..+">
+											Contains @ followed by a dot
+										</li>
+										<li data-pattern=".{6,}">
+											At least 6 characters
+										</li>
+									</ul>
+								</form-validation-list>
+
+								<button type="submit">Submit</button>
+								<div
+									id="message3"
+									class="validation-message"
+									role="status"
+								></div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section id="class-styling">
+				<h2>Style fields and rules with your own classes</h2>
+				<div class="demo-section" id="custom-css-classes">
 					<h3>Custom CSS Classes</h3>
 					<p>
 						Customize the class names applied to fields and rules
@@ -400,6 +631,8 @@
   .rule-fail { font-style: italic; }
 &lt;/style&gt;
 
+&lt;label for="custom-classes"&gt;Custom class names:&lt;/label&gt;
+&lt;input type="text" id="custom-classes" name="custom-classes" required&gt;
 <mark>&lt;form-validation-list
   for="custom-classes"
   field-valid-class="is-valid"
@@ -415,14 +648,10 @@
 						<div class="demo" data-demo-label="Live example">
 							<style>
 								input.is-valid {
-									border-color: FieldText;
-									border-width: 2px;
-									border-style: solid;
+									border: 2px solid FieldText;
 								}
 								input.is-invalid {
-									border-color: FieldText;
-									border-width: 2px;
-									border-style: dashed;
+									border: 2px dashed FieldText;
 								}
 								.rule-pass {
 									font-weight: bold;
@@ -470,187 +699,6 @@
 					</div>
 				</div>
 			</section>
-
-			<!-- Event Listener Example -->
-			<section>
-				<h2>JavaScript API</h2>
-				<p>
-					Listening to validation events and using the programmatic
-					API.
-				</p>
-
-				<div class="demo-section">
-					<h3>Event-Driven Validation</h3>
-					<p>
-						This example shows how to listen to validation events.
-					</p>
-					<div class="code-demo-pair">
-						<micro-lighter
-							class="code-panel"
-							language="html"
-							controls="copy"
-							data-label="HTML"
-						>
-							<pre
-								aria-label="Event-Driven Validation code 6"
-								tabindex="0"
-							><code>&lt;script&gt;
-  const validationList = document.querySelector('#api-validation');
-
-  validationList.addEventListener('form-validation-list:validated', (e) =&gt; {
-    const { isValid, matchedRules, totalRules } = e.detail;
-    console.log(`Matched ${matchedRules} of ${totalRules} rules`);
-  });
-
-  // Programmatically trigger validation
-  const isValid = validationList.validate();
-  console.log('Is valid:', isValid);
-
-  // Check current state
-  console.log('Current state:', validationList.isValid);
-&lt;/script&gt;</code></pre>
-						</micro-lighter>
-						<div class="demo" data-demo-label="Live example">
-							<form id="form4">
-								<label for="api-field">Test Field:</label>
-								<input
-									type="text"
-									id="api-field"
-									name="api-field"
-									required
-								/>
-
-								<form-validation-list
-									for="api-field"
-									id="api-validation"
-								>
-									<ul>
-										<li data-pattern="^[a-zA-Z]+$">
-											Only letters
-										</li>
-										<li data-pattern=".{3,}">
-											At least 3 characters
-										</li>
-									</ul>
-								</form-validation-list>
-
-								<button type="button" id="check-validity">
-									Check Validity
-								</button>
-								<button type="submit">Submit</button>
-								<div
-									id="message4"
-									class="validation-message"
-									style="display: none"
-								></div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			<!-- Internationalization Example -->
-			<section>
-				<h2>Internationalization (i18n)</h2>
-				<p>
-					This example localizes the browser validation message, the
-					live summary announcement, and the per-rule hidden state
-					text.
-				</p>
-
-				<div class="demo-section">
-					<h3>Spanish Validation Messages</h3>
-					<p>
-						Using
-						<code>validation-message</code>,
-						<code>announcement</code>, and the
-						<code>rule-*-alt</code> attributes keep the spoken
-						experience localized.
-					</p>
-					<div class="code-demo-pair">
-						<micro-lighter
-							class="code-panel"
-							language="html"
-							controls="copy"
-							data-label="HTML"
-						>
-							<pre
-								aria-label="Spanish Validation Messages code 7"
-								tabindex="0"
-							><code>&lt;form&gt;
-  &lt;label for="contrasena"&gt;Contraseña:&lt;/label&gt;
-  &lt;input
-    type="password"
-    id="contrasena"
-    name="contrasena"
-    required&gt;
-
-  <mark>&lt;form-validation-list
-    for="contrasena"
-    announcement="{matched} de {total} criterios cumplidos"
-    rule-matched-alt="Criterio cumplido"
-    rule-unmatched-alt="Criterio pendiente"
-    validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"&gt;</mark>
-    &lt;ul&gt;
-      &lt;li data-pattern="[A-Z]+"&gt;Al menos una letra mayúscula&lt;/li&gt;
-      &lt;li data-pattern="[a-z]+"&gt;Al menos una letra minúscula&lt;/li&gt;
-      &lt;li data-pattern="[\d]+"&gt;Al menos un número&lt;/li&gt;
-      &lt;li data-pattern="[!@#$%^&amp;*]+"&gt;Al menos un carácter especial (!@#$%^&amp;*)&lt;/li&gt;
-      &lt;li data-pattern=".{8,}"&gt;Al menos 8 caracteres&lt;/li&gt;
-    &lt;/ul&gt;
-  <mark>&lt;/form-validation-list&gt;</mark>
-
-  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
-&lt;/form&gt;</code></pre>
-						</micro-lighter>
-						<div class="demo" data-demo-label="Ejemplo interactivo">
-							<form id="form5" lang="es">
-								<label for="contrasena">Contraseña:</label>
-								<input
-									type="password"
-									id="contrasena"
-									name="contrasena"
-									required
-								/>
-
-								<form-validation-list
-									for="contrasena"
-									announcement="{matched} de {total} criterios cumplidos"
-									rule-matched-alt="Criterio cumplido"
-									rule-unmatched-alt="Criterio pendiente"
-									validation-message="Por favor, cumple todos los requisitos ({matched} de {total})"
-								>
-									<ul>
-										<li data-pattern="[A-Z]+">
-											Al menos una letra mayúscula
-										</li>
-										<li data-pattern="[a-z]+">
-											Al menos una letra minúscula
-										</li>
-										<li data-pattern="[\d]+">
-											Al menos un número
-										</li>
-										<li data-pattern="[!@#$%^&*]+">
-											Al menos un carácter especial
-											(!@#$%^&*)
-										</li>
-										<li data-pattern=".{8,}">
-											Al menos 8 caracteres
-										</li>
-									</ul>
-								</form-validation-list>
-
-								<button type="submit">Enviar</button>
-								<div
-									id="message5"
-									class="validation-message"
-									style="display: none"
-								></div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</section>
 		</main>
 
 		<footer>
@@ -678,7 +726,7 @@
 
 				if (isValid) {
 					message1.className = 'validation-message success';
-					message1.textContent = '✓ Username is valid!';
+					message1.textContent = '✓ Username requirements matched.';
 				} else {
 					message1.className = 'validation-message error';
 					message1.textContent =
@@ -697,7 +745,7 @@
 
 				if (isValid) {
 					message2.className = 'validation-message success';
-					message2.textContent = '✓ Password is strong!';
+					message2.textContent = '✓ Password requirements matched.';
 				} else {
 					message2.className = 'validation-message error';
 					message2.textContent =
@@ -716,7 +764,8 @@
 
 				if (isValid) {
 					message3.className = 'validation-message success';
-					message3.textContent = '✓ Email is valid!';
+					message3.textContent =
+						'✓ Example email requirements matched.';
 				} else {
 					message3.className = 'validation-message error';
 					message3.textContent =
@@ -725,48 +774,29 @@
 			});
 
 			// Form 4: API demonstration
-			const form4 = document.getElementById('form4');
 			const message4 = document.getElementById('message4');
 			const validationList = document.getElementById('api-validation');
+			const field = document.getElementById('api-field');
 			const checkButton = document.getElementById('check-validity');
 
 			validationList.addEventListener(
 				'form-validation-list:validated',
-				(e) => {
-					const { isValid, matchedRules, totalRules } = e.detail;
-					console.log(
-						`Validation event: ${matchedRules}/${totalRules} rules matched. Valid: ${isValid}`,
-					);
+				(event) => {
+					const { matchedRules, totalRules } = event.detail;
+					message4.textContent = `${matchedRules} of ${totalRules} requirements matched. Browser validity: ${field.checkValidity() ? 'valid' : 'invalid'}.`;
 				},
 			);
 
 			checkButton.addEventListener('click', () => {
-				const isValid = validationList.validate();
-				message4.style.display = 'block';
-
-				if (isValid) {
-					message4.className = 'validation-message success';
-					message4.textContent = `✓ Field is valid! (isValid property: ${validationList.isValid})`;
-				} else {
-					message4.className = 'validation-message error';
-					message4.textContent = `✗ Field is not valid. (isValid property: ${validationList.isValid})`;
-				}
+				validationList.validate();
 			});
 
-			form4.addEventListener('submit', (e) => {
-				e.preventDefault();
-				const isValid = form4.checkValidity();
-				message4.style.display = 'block';
-
-				if (isValid) {
-					message4.className = 'validation-message success';
-					message4.textContent = '✓ Form is valid!';
-				} else {
-					message4.className = 'validation-message error';
-					message4.textContent =
-						'✗ Please meet all validation requirements.';
-				}
-			});
+			// Keep this demonstration on the page, including implicit submission.
+			document
+				.getElementById('form4')
+				.addEventListener('submit', (event) => {
+					event.preventDefault();
+				});
 
 			// Form 5: Spanish validation
 			const form5 = document.getElementById('form5');
@@ -779,7 +809,8 @@
 
 				if (isValid) {
 					message5.className = 'validation-message success';
-					message5.textContent = '✓ ¡La contraseña es válida!';
+					message5.textContent =
+						'✓ Requisitos de contraseña cumplidos.';
 				} else {
 					message5.className = 'validation-message error';
 					message5.textContent =
