@@ -39,11 +39,13 @@
 				hidden
 			></p>
 
-			<section class="demo-section">
+			<section class="demo-section" id="esm-class-registration">
 				<h2>Import the class and register it</h2>
 				<p>
 					The class-only import does not register an element. Both
-					icon states inherit the rule’s text color.
+					icon states inherit the rule’s text color. These patterns
+					illustrate requirement matching, not a comprehensive
+					password check or a measure of strength.
 				</p>
 				<div class="code-demo-pair">
 					<micro-lighter
@@ -58,10 +60,9 @@
 						><code><mark>import { FormValidationListElement } from
   'https://esm.sh/@aarongustafson/form-validation-list@2.3.3/form-validation-list.js?bundle&amp;target=es2022';</mark>
 
-<mark>customElements.define(
-  'form-validation-list',
-  FormValidationListElement
-);</mark>
+<mark>if (!customElements.get('form-validation-list')) {
+  customElements.define('form-validation-list', FormValidationListElement);
+}</mark>
 
 &lt;label for="password"&gt;Password&lt;/label&gt;
 &lt;input type="password" id="password" name="password"&gt;

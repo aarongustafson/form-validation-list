@@ -589,6 +589,92 @@ async function localCDN(page) {
 	});
 }
 
+test('every authored example has a unique fragment destination, including CDN and localized blocks', async ({
+	page,
+}) => {
+	await localCDN(page);
+	for (const demo of ['index.html', 'esm.html', 'unpkg.html']) {
+		await page.goto(`/demo/${demo}`);
+		const destinations = await page
+			.locator('.code-demo-pair')
+			.evaluateAll((pairs) =>
+				pairs.map((pair) => {
+					const block = pair.parentElement;
+					return {
+						id: block.id,
+						hasHeading: Boolean(block.querySelector('h2, h3')),
+					};
+				}),
+			);
+		expect(destinations.length).toBeGreaterThan(0);
+		for (const { id, hasHeading } of destinations) {
+			expect(id).toMatch(/^[a-z][a-z0-9-]+$/);
+			expect(hasHeading).toBe(true);
+			await expect(page.locator(`[id="${id}"]`)).toHaveCount(1);
+			await page.evaluate((fragment) => {
+				location.hash = fragment;
+			}, id);
+			await expect(page.locator(':target')).toHaveAttribute('id', id);
+		}
+		const ids = await page
+			.locator('[id]')
+			.evaluateAll((elements) => elements.map((element) => element.id));
+		expect(new Set(ids).size).toBe(ids.length);
+	}
+});
+
+test('manual validation reports event counts, native constraints, and localized result semantics without moving focus', async ({
+	page,
+}) => {
+	await page.goto('/demo/index.html');
+	const field = page.locator('#api-field');
+	const button = page.locator('#check-validity');
+	const result = page.locator('#message4');
+	await expect(result).toHaveAttribute('role', 'status');
+	await expect(page.locator('#form5')).toHaveAttribute('lang', 'es');
+	await expect(page.locator('#message5')).toHaveAttribute('role', 'status');
+	const list = page.locator('#api-validation');
+	await expect(list).toHaveAttribute('trigger-event', 'blur');
+	await field.fill('abc');
+	await page.evaluate(() => {
+		const list = document.getElementById('api-validation');
+		list.addEventListener('form-validation-list:validated', (event) => {
+			window.demoValidation = {
+				isValid: event.detail.isValid,
+				matchedRules: event.detail.matchedRules,
+				totalRules: event.detail.totalRules,
+			};
+		});
+	});
+	await button.focus();
+	await page.keyboard.press('Enter');
+	await expect(button).toBeFocused();
+	await expect(result).toBeVisible();
+	await expect(result).toContainText('2');
+	expect(await page.evaluate(() => window.demoValidation)).toEqual({
+		isValid: true,
+		matchedRules: 2,
+		totalRules: 2,
+	});
+	// Programmatic assignment sends no input/blur event: the button must validate it.
+	await field.evaluate((input) => {
+		input.value = '1';
+	});
+	await page.keyboard.press('Space');
+	await expect(result).toContainText('0');
+	expect(await field.evaluate((input) => input.validity.customError)).toBe(
+		true,
+	);
+	await field.evaluate((input) => {
+		input.value = '';
+	});
+	await page.keyboard.press('Enter');
+	expect(await field.evaluate((input) => input.validity.valueMissing)).toBe(
+		true,
+	);
+	await expect(button).toBeFocused();
+});
+
 for (const demo of ['index.html', 'esm.html', 'unpkg.html']) {
 	test(`${demo}: code/live layout, native focus, custom colors and validation work at wide and narrow widths`, async ({
 		page,
